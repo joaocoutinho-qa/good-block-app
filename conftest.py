@@ -51,8 +51,6 @@ def pytest_runtest_makereport(item, call):
 @pytest.fixture(scope="function")
 def driver(request):
     options = webdriver.FirefoxOptions()
-    options.set_preference("fission.autostart", False)
-    options.set_preference("fission.autostart.session", False)
     os.makedirs(DRIVER_LOGS_DIR, exist_ok=True)
     driver_log_path = os.path.join(DRIVER_LOGS_DIR, f"{request.node.name}.log")
 
