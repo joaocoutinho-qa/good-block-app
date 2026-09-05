@@ -1,12 +1,13 @@
 """End-to-end Good Block acceptance tests."""
 import pytest
+
+from configuration import settings
 from pages.base_page import BasePage
 from pages.good_block_page import GoodBlockPage
 
-FACEBOOK_DOMAIN = "www.facebook.com"
-FACEBOOK_URL = f"https://{FACEBOOK_DOMAIN}/"
-WORK_GROUP = "Work"
-
+FACEBOOK_DOMAIN = settings.FACEBOOK_DOMAIN
+FACEBOOK_URL = settings.FACEBOOK_URL
+WORK_GROUP = settings.WORK_GROUP
 @pytest.fixture
 def good_block_page(driver):
     """Open the Good Block popup for the current Firefox profile."""
