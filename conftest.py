@@ -98,6 +98,8 @@ def pytest_runtest_makereport(item, call):
 @pytest.fixture(scope="function")
 def driver(request):
     options = webdriver.FirefoxOptions()
+    options.set_preference("fission.autostart", False)
+    options.set_preference("fission.autostart.session", False)
     if os.getenv("HEADLESS") == "1":
         options.add_argument("-headless")
     os.makedirs(DRIVER_LOGS_DIR, exist_ok=True)
