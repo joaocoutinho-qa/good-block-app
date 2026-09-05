@@ -10,6 +10,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      selenium:
+        image: selenium/standalone-firefox:latest
+        ports:
+          - 4444:4444
+        options: --shm-size=2g
 
     steps:
       - name: Checkout code
@@ -21,34 +27,25 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Install Firefox (real binary, not snap)
-        uses: browser-actions/setup-firefox@v1
-        with:
-          firefox-version: latest-esr
-
-      - name: Install geckodriver
-        uses: browser-actions/setup-geckodriver@latest
-        with:
-          geckodriver-version: latest
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify Firefox installation
-        run: |
-          firefox --version
-          geckodriver --version
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests (with XVFB for headed mode)
-        # The ESR runner can fail IPC while injecting temporary-addon content scripts.
-        # GitHub-hosted runners are ephemeral, so disable this sandbox only in CI.
+      - name: Run tests in Selenium Firefox container
         env:
-          MOZ_DISABLE_CONTENT_SANDBOX: "1"
+          SELENIUM_REMOTE_URL: http://127.0.0.1:4444/wd/hub
         run: |
-          xvfb-run --auto-servernum pytest -v
+          ready=false
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4444/wd/hub/status; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" = true
+          pytest -v
 
       - name: Upload test evidence
         uses: actions/upload-artifact@v4
