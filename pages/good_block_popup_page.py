@@ -17,8 +17,12 @@ from pages.base_page import BasePage
 class GoodBlockPopupPage(BasePage):
     URL_TEMPLATE = "moz-extension://{uuid}/popup.html"
 
+    # O popup inicial exibe a criação de grupo como o controle circular "+".
+    ADD_GROUP_BUTTON = (
+        By.XPATH,
+        "//*[self::button or @role='button'][normalize-space(.)='+']",
+    )
     # --- PLACEHOLDERS: ajustar após inspecionar o DOM real com explore.py ---
-    ADD_GROUP_BUTTON = (By.XPATH, "//button[contains(text(), 'Add group')]")
     GROUP_NAME_INPUT = (By.CSS_SELECTOR, "input[name='groupName']")
     SITES_TEXTAREA = (By.CSS_SELECTOR, "textarea[name='sites']")
     SAVE_GROUP_BUTTON = (By.XPATH, "//button[contains(text(), 'Save')]")

@@ -46,10 +46,12 @@ jobs:
         run: |
           xvfb-run --auto-servernum pytest -v
 
-      - name: Upload test screenshots
+      - name: Upload test evidence
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-screenshots
-          path: screenshots/
+          name: test-evidence
+          path: |
+            screenshots/
+            dom/
           if-no-files-found: ignore

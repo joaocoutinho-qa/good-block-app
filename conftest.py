@@ -12,6 +12,7 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 import config
 
 SCREENSHOTS_DIR = os.path.join(config.BASE_DIR, "screenshots")
+DOM_DIR = os.path.join(config.BASE_DIR, "dom")
 
 
 def _build_service():
@@ -49,6 +50,7 @@ def driver(request):
     firefox_driver.extension_id = extension_id
 
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
+    os.makedirs(DOM_DIR, exist_ok=True)
 
     yield firefox_driver
 
@@ -57,10 +59,14 @@ def driver(request):
     rep_call = getattr(request.node, "rep_call", None)
     status = "FAILED" if (rep_call and rep_call.failed) else "PASSED"
     screenshot_path = os.path.join(SCREENSHOTS_DIR, f"{test_name}_{status}.png")
+    dom_path = os.path.join(DOM_DIR, f"{test_name}_{status}.html")
 
     try:
         firefox_driver.save_screenshot(screenshot_path)
+        with open(dom_path, "w", encoding="utf-8") as dom_file:
+            dom_file.write(firefox_driver.page_source)
         print(f"\n[Screenshot salvo]: {screenshot_path}")
+        print(f"[DOM salvo]: {dom_path}")
     except Exception as e:
         print(f"\n[Erro ao salvar screenshot]: {e}")
 
