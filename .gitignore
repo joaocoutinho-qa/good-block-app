@@ -6,3 +6,4 @@ venv/
 
 # Selenium / geckodriver
 extensions/*.xpi
+screenshots/
