@@ -98,4 +98,4 @@ project/
 | `NoSuchElementException` / elemento não encontrado | Seletor placeholder ainda não foi ajustado | Rode `python explore.py` e atualize o locator correspondente no Page Object |
 | `geckodriver` não encontrado / versão incompatível | Driver desatualizado | O projeto usa `webdriver-manager`, que baixa a versão correta automaticamente; se persistir, delete o cache em `~/.wdm` e rode de novo |
 | Extensão não aparece em `about:debugging` | Caminho em `EXTENSION_PATH` incorreto | Confirme em `config.py` que o caminho aponta para uma pasta com `manifest.json` na raiz, ou para um `.xpi` válido |
-| Testes muito lentos ou instáveis em modo headless | Extensões podem não funcionar corretamente em headless no Firefox | Mantenha `headless=False` (padrão deste projeto) |
+| Testes muito lentos ou instáveis no CI | Ambiente gráfico do runner pode afetar o Firefox | A pipeline executa Firefox com `-headless`; localmente o navegador continua visível |

@@ -24,7 +24,7 @@ jobs:
       - name: Install Firefox ESR
         uses: browser-actions/setup-firefox@v1
         with:
-          firefox-version: 128.12.0esr
+          firefox-version: latest-esr
 
       - name: Install geckodriver
         uses: browser-actions/setup-geckodriver@latest
@@ -42,9 +42,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests with Firefox
+      - name: Run tests with Firefox headless
         run: |
-          xvfb-run --auto-servernum pytest -v
+          pytest -v
 
       - name: Upload test evidence
         uses: actions/upload-artifact@v4
