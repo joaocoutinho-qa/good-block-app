@@ -66,7 +66,10 @@ def driver(request):
     )
 
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
+    os.makedirs(config.ACTION_SCREENSHOTS_DIR, exist_ok=True)
     os.makedirs(DOM_DIR, exist_ok=True)
+    firefox_driver.action_screenshot_index = 0
+    firefox_driver.action_screenshot_test_name = request.node.name
 
     yield firefox_driver
 

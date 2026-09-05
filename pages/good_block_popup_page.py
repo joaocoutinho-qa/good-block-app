@@ -43,6 +43,7 @@ class GoodBlockPopupPage(BasePage):
     def open(self):
         url = self.URL_TEMPLATE.format(uuid=self.uuid)
         self.driver.get(url)
+        self.capture_screenshot("popup-opened")
         return self
 
     def create_group(self, name, sites):
@@ -90,6 +91,7 @@ class GoodBlockPopupPage(BasePage):
             )
         )
         Select(self.find(self.GROUP_SELECT)).select_by_visible_text(name)
+        self.capture_screenshot("select-group")
         return self
 
     def _wait_for_saved_site(self, group_name, site):

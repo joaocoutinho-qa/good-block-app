@@ -36,6 +36,7 @@ def test_blocked_site_shows_modal(driver, popup_page):
     popup_page.create_group("Trabalho", [FACEBOOK_DOMAIN])
     assert popup_page.is_group_enabled("Trabalho")
     assert popup_page.has_saved_site("Trabalho", FACEBOOK_DOMAIN)
+    popup_page.capture_screenshot("before-facebook-navigation")
 
     driver.get(FACEBOOK_URL)
     blocked = BlockedPage(driver)

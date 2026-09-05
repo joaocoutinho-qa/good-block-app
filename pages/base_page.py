@@ -4,6 +4,9 @@ BasePage: utilitários compartilhados por todos os Page Objects
 para descobrir o UUID interno moz-extension:// da extensão via
 about:debugging#/runtime/this-firefox.
 """
+import os
+import re
+
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -24,12 +27,14 @@ class BasePage:
     def click(self, locator, timeout=config.DEFAULT_TIMEOUT):
         element = self.wait(timeout).until(EC.element_to_be_clickable(locator))
         element.click()
+        self.capture_screenshot("click")
         return element
 
     def fill(self, locator, text, timeout=config.DEFAULT_TIMEOUT):
         element = self.find(locator, timeout)
         element.clear()
         element.send_keys(text)
+        self.capture_screenshot("fill")
         return element
 
     def is_visible(self, locator, timeout=config.SHORT_TIMEOUT):
@@ -41,6 +46,20 @@ class BasePage:
 
     def get_text(self, locator, timeout=config.DEFAULT_TIMEOUT):
         return self.find(locator, timeout).text
+
+    def capture_screenshot(self, action):
+        """Salva a tela após uma ação relevante para evidência do teste."""
+        index = getattr(self.driver, "action_screenshot_index", 0) + 1
+        self.driver.action_screenshot_index = index
+        test_name = getattr(self.driver, "action_screenshot_test_name", "action")
+        safe_action = re.sub(r"[^a-z0-9]+", "-", action.lower()).strip("-")
+        filename = f"{test_name}_{index:02d}_{safe_action}.png"
+        path = os.path.join(config.ACTION_SCREENSHOTS_DIR, filename)
+
+        if not self.driver.save_screenshot(path):
+            raise RuntimeError(f"Não foi possível salvar o screenshot: {path}")
+        print(f"\n[Screenshot da ação salvo]: {path}")
+        return path
 
     @staticmethod
     def discover_extension_uuid(driver, extension_name="Good Block", timeout=config.DEFAULT_TIMEOUT):

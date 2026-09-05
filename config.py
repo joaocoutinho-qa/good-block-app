@@ -4,6 +4,7 @@ Configuração central do projeto: caminhos, ID da extensão e timeouts.
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ACTION_SCREENSHOTS_DIR = os.path.join(BASE_DIR, "screenshots", "actions")
 
 # Caminho para a extensão Good Block. Pode ser:
 #  - uma pasta com o código-fonte extraído (manifest.json na raiz), ou

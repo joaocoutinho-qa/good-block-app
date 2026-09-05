@@ -71,6 +71,11 @@ Os testes em [`tests/test_good_block.py`](./tests/test_good_block.py) usam
 uma instância limpa do Firefox por teste (fixture `driver` em
 [`conftest.py`](./conftest.py), escopo `function`).
 
+Na pipeline, o artifact `test-evidence` inclui screenshots em
+`screenshots/actions/`, numerados pela ordem de execução. Há uma captura após
+cada clique, preenchimento e seleção, além da configuração imediatamente antes
+da navegação para o Facebook.
+
 ## Estrutura do projeto
 
 ```
