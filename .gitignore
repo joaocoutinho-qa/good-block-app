@@ -8,3 +8,4 @@ venv/
 extensions/*.xpi
 screenshots/
 dom/
+driver-logs/

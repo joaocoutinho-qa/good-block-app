@@ -5,6 +5,7 @@ de cada teste para visualização na pipeline de CI (GitHub Actions).
 """
 import os
 import shutil
+
 import pytest
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
@@ -13,9 +14,10 @@ import config
 
 SCREENSHOTS_DIR = os.path.join(config.BASE_DIR, "screenshots")
 DOM_DIR = os.path.join(config.BASE_DIR, "dom")
+DRIVER_LOGS_DIR = os.path.join(config.BASE_DIR, "driver-logs")
 
 
-def _build_service():
+def _build_service(log_output=None):
     """
     Usa o geckodriver já instalado no PATH (ex.: instalado pela action
     browser-actions/setup-geckodriver na pipeline de CI). Se não estiver
@@ -24,10 +26,18 @@ def _build_service():
     """
     geckodriver_path = shutil.which("geckodriver")
     if geckodriver_path:
-        return FirefoxService(geckodriver_path)
+        return FirefoxService(
+            executable_path=geckodriver_path,
+            service_args=["--log", "trace"],
+            log_output=log_output,
+        )
 
     from webdriver_manager.firefox import GeckoDriverManager
-    return FirefoxService(GeckoDriverManager().install())
+    return FirefoxService(
+        executable_path=GeckoDriverManager().install(),
+        service_args=["--log", "trace"],
+        log_output=log_output,
+    )
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -41,8 +51,10 @@ def pytest_runtest_makereport(item, call):
 @pytest.fixture(scope="function")
 def driver(request):
     options = webdriver.FirefoxOptions()
+    os.makedirs(DRIVER_LOGS_DIR, exist_ok=True)
+    driver_log_path = os.path.join(DRIVER_LOGS_DIR, f"{request.node.name}.log")
 
-    service = _build_service()
+    service = _build_service(driver_log_path)
     firefox_driver = webdriver.Firefox(service=service, options=options)
 
     # Instala a extensão em tempo de execução

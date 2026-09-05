@@ -54,4 +54,5 @@ jobs:
           path: |
             screenshots/
             dom/
+            driver-logs/
           if-no-files-found: ignore
