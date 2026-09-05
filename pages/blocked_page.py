@@ -14,7 +14,7 @@ class BlockedPage(BasePage):
     MODAL_CONTAINER = (By.CSS_SELECTOR, "#modal-root > div")
     MOTIVATIONAL_MESSAGE = (
         By.XPATH,
-        "//div[@id='modal-root']//h3[contains(., \"Hey, you should't be here\")]",
+        "//div[@id='modal-root']//h1[contains(., \"Hey, you should't be here\")]",
     )
 
     def is_modal_visible(self, timeout=config.BLOCKED_PAGE_TIMEOUT):
