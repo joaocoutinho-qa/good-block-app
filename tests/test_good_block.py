@@ -79,8 +79,10 @@ def test_tc14_persist_blocking_after_firefox_restart():
             options=_firefox_options(profile_dir),
         )
         try:
-            driver.install_addon(settings.EXTENSION_PATH, temporary=False)
-            page = GoodBlockPage(driver, BasePage.discover_extension_uuid(driver)).open()
+            persisted_uuid = str(
+                driver.install_addon(settings.EXTENSION_PATH, temporary=False)
+            ).strip("{}")
+            page = GoodBlockPage(driver, persisted_uuid).open()
 
             # Arrange: create the group and keep it enabled.
             page.create_group(WORK_GROUP, [FACEBOOK_DOMAIN])
@@ -94,10 +96,8 @@ def test_tc14_persist_blocking_after_firefox_restart():
             options=_firefox_options(profile_dir),
         )
         try:
-            restarted_page = GoodBlockPage(
-                restarted_driver,
-                BasePage.discover_extension_uuid(restarted_driver),
-            ).open()
+            restarted_driver.extension_id = persisted_uuid
+            restarted_page = GoodBlockPage(restarted_driver, persisted_uuid).open()
 
             # Act: reopen Firefox and navigate to the blocked site.
             restarted_driver.get(FACEBOOK_URL)

@@ -46,6 +46,10 @@ class BasePage:
         timeout=settings.DEFAULT_TIMEOUT,
     ):
         """Return the UUID assigned to the installed extension by Firefox."""
+        extension_id = getattr(driver, "extension_id", None)
+        if extension_id:
+            return str(extension_id).strip("{}")
+
         driver.get("about:debugging#/runtime/this-firefox")
 
         card = WebDriverWait(driver, timeout).until(
