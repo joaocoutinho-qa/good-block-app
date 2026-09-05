@@ -18,10 +18,7 @@ class GoodBlockPopupPage(BasePage):
     URL_TEMPLATE = "moz-extension://{uuid}/popup.html"
 
     # O popup inicial exibe a criação de grupo como o controle circular "+".
-    ADD_GROUP_BUTTON = (
-        By.XPATH,
-        "//*[self::button or @role='button'][normalize-space(.)='+']",
-    )
+    ADD_GROUP_BUTTON = (By.CSS_SELECTOR, "div[color='green']")
     # --- PLACEHOLDERS: ajustar após inspecionar o DOM real com explore.py ---
     GROUP_NAME_INPUT = (By.CSS_SELECTOR, "input[name='groupName']")
     SITES_TEXTAREA = (By.CSS_SELECTOR, "textarea[name='sites']")
