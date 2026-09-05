@@ -44,7 +44,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests with Firefox in a virtual display
+      - name: Run tests for Good Block app
         run: |
           xvfb-run --auto-servernum pytest -v
 
