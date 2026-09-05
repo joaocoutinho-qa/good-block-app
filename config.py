@@ -23,5 +23,5 @@ EXTENSION_ID = None
 
 # Timeouts padrão (em segundos) usados pelos waits explícitos do BasePage.
 DEFAULT_TIMEOUT = 10
-SHORT_TIMEOUT = 3
+SHORT_TIMEOUT = 5
 BLOCKED_PAGE_TIMEOUT = 20

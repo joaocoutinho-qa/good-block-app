@@ -40,13 +40,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --yes ffmpeg
+          sudo apt-get install --yes ffmpeg xvfb
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests with Firefox headless
+      - name: Run tests with Firefox in a virtual display
         run: |
-          pytest -v
+          xvfb-run --auto-servernum pytest -v
 
       - name: Upload test evidence
         uses: actions/upload-artifact@v4
