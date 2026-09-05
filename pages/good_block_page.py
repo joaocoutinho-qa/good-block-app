@@ -1,8 +1,6 @@
 """
-Page Object for all Good Block user interactions.
+Page Object for Good Block user interactions.
 
-It covers the extension popup used to manage blocking groups and the modal
-injected over a blocked website.
 """
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
@@ -67,6 +65,61 @@ class GoodBlockPage(BasePage):
     def has_saved_site(self, group_name, site):
         """Return whether the domain is persisted in the extension group."""
         return self._get_saved_group(group_name).get("sitesList", []).count(site) == 1
+
+    def verify_group_is_enabled(self, name):
+        """Assert the named group is enabled."""
+        assert self.is_group_enabled(name)
+        return self
+
+    def verify_group_has_saved_site(self, group_name, site):
+        """Assert the domain is persisted in the named group."""
+        assert self.has_saved_site(group_name, site)
+        return self
+
+    def remove_site(self, group_name, site):
+        """Remove a persisted site from the named group in extension storage."""
+        result = self.driver.execute_async_script(
+            """
+            const groupName = arguments[0];
+            const site = arguments[1];
+            const done = arguments[arguments.length - 1];
+
+            browser.storage.local.get("groups")
+                .then(({ groups = {} }) => {
+                    const group = groups[groupName] || { active: true, sitesList: [] };
+                    group.sitesList = (group.sitesList || []).filter(item => item !== site);
+                    groups[groupName] = group;
+                    return browser.storage.local.set({ groups });
+                })
+                .then(() => done(true))
+                .catch(error => done({ error: error.message }));
+            """,
+            group_name,
+            site,
+        )
+        if isinstance(result, dict) and "error" in result:
+            raise RuntimeError(f"Could not remove site from storage: {result['error']}")
+        return self
+
+    def go_to(self, url):
+        """Navigate the browser to a target page."""
+        self.driver.get(url)
+        return self
+
+    def verify_site_is_blocked(self):
+        """Assert that the blocked website modal is visible."""
+        assert self.is_modal_visible()
+        return self
+
+    def verify_site_is_not_blocked(self):
+        """Assert that the blocked website modal is not visible."""
+        assert self.is_modal_visible() is False
+        return self
+
+    def verify_motivational_message_is_present(self):
+        """Assert the modal message exists and is not empty."""
+        assert self.get_motivational_message() != ""
+        return self
 
     def select_group(self, name):
         """Select the group after it becomes available in the popup."""
