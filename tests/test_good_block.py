@@ -16,7 +16,7 @@ def good_block_page(driver):
     return GoodBlockPage(driver, uuid).open()
 
 
-def test_tc08_allow_access_for_disabled_category(driver, good_block_page):
+def test_allow_access_for_disabled_category(driver, good_block_page):
     """TC08: A website remains accessible when its group is disabled."""
 
     # Arrange: Create a group with Facebook as the configured website.
@@ -32,7 +32,7 @@ def test_tc08_allow_access_for_disabled_category(driver, good_block_page):
     assert good_block_page.is_modal_visible() is False
 
 
-def test_tc11_complete_blocking_workflow(driver, good_block_page):
+def test_complete_blocking_workflow(driver, good_block_page):
     """TC11: An enabled group blocks its configured website."""
 
     # Arrange: Create an enabled group with Facebook as the configured website.
@@ -48,7 +48,7 @@ def test_tc11_complete_blocking_workflow(driver, good_block_page):
     assert good_block_page.get_motivational_message() != ""
 
 
-def test_tc13_disable_category_and_restore_navigation(driver, good_block_page):
+def test_disable_category_and_restore_navigation(driver, good_block_page):
     """TC13: Disabling a category restores normal browsing."""
 
     # Arrange: Create a group with Facebook enabled.
