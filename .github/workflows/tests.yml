@@ -27,9 +27,10 @@ jobs:
           firefox-version: latest-esr
 
       - name: Install geckodriver
-        uses: browser-actions/setup-geckodriver@v1
+        uses: browser-actions/setup-geckodriver@latest
         with:
           geckodriver-version: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify Firefox installation
         run: |
