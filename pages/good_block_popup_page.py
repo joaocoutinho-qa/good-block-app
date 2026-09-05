@@ -65,7 +65,11 @@ class GoodBlockPopupPage(BasePage):
     def toggle_group(self, name):
         """Ativa/desativa o grupo com o nome informado."""
         self.select_group(name)
+        was_active = self._get_saved_group(name).get("active")
         self.click(self.GROUP_TOGGLE_LABEL)
+        self.wait().until(
+            lambda _: self._get_saved_group(name).get("active") is not was_active
+        )
         return self
 
     def is_group_enabled(self, name):

@@ -21,17 +21,6 @@ def popup_page(driver):
     return GoodBlockPopupPage(driver, uuid).open()
 
 
-def test_create_group(popup_page):
-    popup_page.create_group("Trabalho", ["facebook.com", "twitter.com"])
-    assert popup_page.is_group_present("Trabalho")
-
-
-def test_toggle_group(popup_page):
-    popup_page.create_group("Trabalho", ["facebook.com"])
-    popup_page.toggle_group("Trabalho")
-    assert popup_page.is_group_enabled("Trabalho") is False
-
-
 def test_tc11_complete_blocking_workflow(driver, popup_page):
     popup_page.create_group("Trabalho", [FACEBOOK_DOMAIN])
     assert popup_page.is_group_enabled("Trabalho")
@@ -45,3 +34,19 @@ def test_tc11_complete_blocking_workflow(driver, popup_page):
     assert blocked.is_modal_visible()
     blocked.capture_screenshot("good-block-modal-visible")
     assert blocked.get_motivational_message() != ""
+
+
+def test_tc08_allow_access_for_disabled_category(driver, popup_page):
+    popup_page.create_group("Trabalho", [FACEBOOK_DOMAIN])
+    assert popup_page.is_group_enabled("Trabalho")
+    assert popup_page.has_saved_site("Trabalho", FACEBOOK_DOMAIN)
+
+    popup_page.toggle_group("Trabalho")
+    assert popup_page.is_group_enabled("Trabalho") is False
+    popup_page.capture_screenshot("before-facebook-navigation-disabled")
+
+    driver.get(FACEBOOK_URL)
+    blocked = BlockedPage(driver)
+    blocked.capture_screenshot("facebook-loaded-disabled")
+
+    assert blocked.is_modal_visible() is False
