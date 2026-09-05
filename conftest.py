@@ -108,10 +108,11 @@ def driver(request):
     service = _build_service(driver_log_path)
     firefox_driver = webdriver.Firefox(service=service, options=options)
 
-    # Instala a extensão em tempo de execução
+    # O XPI é assinado; a instalação não temporária garante que o Firefox
+    # registre os content scripts como uma extensão instalada normalmente.
     firefox_driver.extension_id = firefox_driver.install_addon(
         config.EXTENSION_PATH,
-        temporary=True,
+        temporary=False,
     )
 
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True)

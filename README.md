@@ -26,21 +26,15 @@ funciona normalmente.
    pip install -r requirements.txt
    ```
 
-3. Obtenha o `.xpi` da extensão (duas opções):
-   - **Já incluso**: a pasta [`good-block-extension-src/`](./good-block-extension-src)
-     já contém o código-fonte extraído da extensão (usado por padrão em
-     [`config.py`](./config.py)).
-   - **Baixar da AMO**: acesse
-     https://addons.mozilla.org/firefox/addon/good-block/, baixe o `.xpi`
-     e coloque-o em `extensions/`. Depois, em [`config.py`](./config.py),
-     comente a linha de `EXTENSION_PATH` que aponta para
-     `good-block-extension-src` e descomente a linha que aponta para o
-     `.xpi` em `extensions/`.
+3. O arquivo assinado da extensão já está incluído em
+   [`extensions/good_block-1.0.3.xpi`](./extensions/good_block-1.0.3.xpi).
+   O diretório [`good-block-extension-src/`](./good-block-extension-src)
+   permanece disponível apenas para consulta do código-fonte extraído.
 
 ### Descobrindo o UUID da extensão
 
-Cada instalação temporária recebe um UUID `moz-extension://` novo. O projeto
-o descobre automaticamente em `about:debugging` antes de abrir o popup.
+Cada perfil descartável de teste recebe um UUID `moz-extension://` novo. O
+projeto o descobre automaticamente em `about:debugging` antes de abrir o popup.
 
 ## Ajustando os seletores reais
 
@@ -86,7 +80,7 @@ project/
 ├── config.py              # caminhos, EXTENSION_PATH, timeouts
 ├── conftest.py             # fixture do driver com a extensão instalada
 ├── explore.py              # script exploratório para inspecionar o popup
-├── extensions/             # coloque aqui o .xpi baixado da AMO (opcional)
+├── extensions/             # XPI oficial assinado usado pelos testes
 ├── good-block-extension-src/  # código-fonte da extensão já extraído
 ├── pages/
 │   ├── base_page.py
@@ -100,9 +94,9 @@ project/
 
 | Problema | Causa provável | Solução |
 |---|---|---|
-| `install_addon` falha com erro de assinatura | Extensão não assinada e `temporary=True` não foi passado | Confirme que está chamando `driver.install_addon(path, temporary=True)` |
+| `install_addon` falha com erro de assinatura | XPI ausente ou corrompido | Restaure `extensions/good_block-1.0.3.xpi` e execute os testes novamente |
 | Página `moz-extension://...` fica em branco | UUID errado ou extensão ainda não terminou de instalar | Use `BasePage.discover_extension_uuid()` para obter o UUID atual em vez de fixar um valor |
 | `NoSuchElementException` / elemento não encontrado | Seletor placeholder ainda não foi ajustado | Rode `python explore.py` e atualize o locator correspondente no Page Object |
 | `geckodriver` não encontrado / versão incompatível | Driver desatualizado | O projeto usa `webdriver-manager`, que baixa a versão correta automaticamente; se persistir, delete o cache em `~/.wdm` e rode de novo |
 | Extensão não aparece em `about:debugging` | Caminho em `EXTENSION_PATH` incorreto | Confirme em `config.py` que o caminho aponta para uma pasta com `manifest.json` na raiz, ou para um `.xpi` válido |
-| Testes muito lentos ou instáveis no CI | Ambiente gráfico do runner pode afetar o Firefox | A pipeline executa Firefox com `-headless`; localmente o navegador continua visível |
+| Testes muito lentos ou instáveis no CI | Ambiente gráfico do runner pode afetar o Firefox | A pipeline executa Firefox no Xvfb; localmente o navegador continua visível |
