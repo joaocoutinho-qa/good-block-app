@@ -21,10 +21,20 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Install Firefox
+      - name: Install Firefox (real binary, not snap)
+        uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: latest-esr
+
+      - name: Install geckodriver
+        uses: browser-actions/setup-geckodriver@v1
+        with:
+          geckodriver-version: latest
+
+      - name: Verify Firefox installation
         run: |
-          sudo apt-get update
-          sudo apt-get install -y firefox
+          firefox --version
+          geckodriver --version
 
       - name: Install dependencies
         run: |

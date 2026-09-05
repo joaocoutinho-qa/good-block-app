@@ -4,14 +4,29 @@ Good Block já instalada, e tira screenshots automaticamente ao final
 de cada teste para visualização na pipeline de CI (GitHub Actions).
 """
 import os
+import shutil
 import pytest
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
-from webdriver_manager.firefox import GeckoDriverManager
 
 import config
 
 SCREENSHOTS_DIR = os.path.join(config.BASE_DIR, "screenshots")
+
+
+def _build_service():
+    """
+    Usa o geckodriver já instalado no PATH (ex.: instalado pela action
+    browser-actions/setup-geckodriver na pipeline de CI). Se não estiver
+    disponível (ambiente local), cai para o webdriver-manager, que baixa
+    a versão correta automaticamente.
+    """
+    geckodriver_path = shutil.which("geckodriver")
+    if geckodriver_path:
+        return FirefoxService(geckodriver_path)
+
+    from webdriver_manager.firefox import GeckoDriverManager
+    return FirefoxService(GeckoDriverManager().install())
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -26,7 +41,7 @@ def pytest_runtest_makereport(item, call):
 def driver(request):
     options = webdriver.FirefoxOptions()
 
-    service = FirefoxService(GeckoDriverManager().install())
+    service = _build_service()
     firefox_driver = webdriver.Firefox(service=service, options=options)
 
     # Instala a extensão em tempo de execução

@@ -8,16 +8,15 @@ Uso:
     python explore.py
 """
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from webdriver_manager.firefox import GeckoDriverManager
 
 import config
+from conftest import _build_service
 from pages.base_page import BasePage
 
 
 def main():
     options = webdriver.FirefoxOptions()
-    service = FirefoxService(GeckoDriverManager().install())
+    service = _build_service()
     driver = webdriver.Firefox(service=service, options=options)
 
     try:
