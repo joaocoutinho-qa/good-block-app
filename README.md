@@ -1,102 +1,66 @@
-# Good Block Automation (Selenium + Python)
+# Good Block Automation
 
-Automação da extensão Firefox **Good Block** (bloqueio de sites, Manifest V2)
-usando Selenium WebDriver + geckodriver, com Page Object Model (POM).
+End-to-end automation for the Firefox **Good Block** extension using Selenium,
+geckodriver, pytest, and the Page Object Model.
 
-## Por que Selenium (e não Playwright)?
+## Requirements
 
-O Playwright usa o protocolo Juggler para controlar o Firefox, que **não
-permite navegar para páginas `moz-extension://`** (o popup da extensão
-trava em `about:blank` e nunca carrega). O Selenium usa o geckodriver
-real, que não tem essa limitação — `driver.get("moz-extension://...")`
-funciona normalmente.
+- Python 3.12 or later
+- Firefox
+- geckodriver available on `PATH`, or an internet connection so
+  `webdriver-manager` can download it
 
-## Instalação
+## Setup
 
-1. Crie e ative um ambiente virtual:
+1. Create and activate a virtual environment.
 
    ```powershell
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1
    ```
 
-2. Instale as dependências:
+2. Install the dependencies.
 
    ```powershell
    pip install -r requirements.txt
    ```
 
-3. O arquivo assinado da extensão já está incluído em
-   [`extensions/good_block-1.0.3.xpi`](./extensions/good_block-1.0.3.xpi).
-   O diretório [`good-block-extension-src/`](./good-block-extension-src)
-   permanece disponível apenas para consulta do código-fonte extraído.
+The signed extension package at
+[`extensions/good_block-1.0.3.xpi`](./extensions/good_block-1.0.3.xpi) is
+installed into a clean Firefox profile for every test.
 
-### Descobrindo o UUID da extensão
+## Project structure
 
-Cada perfil descartável de teste recebe um UUID `moz-extension://` novo. O
-projeto o descobre automaticamente em `about:debugging` antes de abrir o popup.
-
-## Ajustando os seletores reais
-
-Os seletores em [`pages/good_block_popup_page.py`](./pages/good_block_popup_page.py)
-e [`pages/blocked_page.py`](./pages/blocked_page.py) são **placeholders**
-(o `popup.js` real é um bundle Webpack minificado, então não dá pra
-adivinhar os seletores certos sem inspecionar o DOM renderizado).
-
-Para descobrir os seletores reais:
-
-```powershell
-python explore.py
+```text
+configuration/  Test settings and paths
+extensions/     Signed Firefox extension package
+pages/          Shared browser helpers and the Good Block Page Object
+tests/          Acceptance tests
 ```
 
-Isso abre o Firefox com a extensão instalada, navega até o popup, e
-pausa a execução. Abra o DevTools (F12) na janela do Firefox, inspecione
-os elementos reais (botão "Add group", campos de nome/sites, lista de
-grupos, toggle liga/desliga, modal de bloqueio) e atualize os locators
-nos Page Objects correspondentes.
-
-## Rodando os testes
+## Run the tests
 
 ```powershell
 pytest -v
 ```
 
-Os testes em [`tests/test_good_block.py`](./tests/test_good_block.py) usam
-uma instância limpa do Firefox por teste (fixture `driver` em
-[`conftest.py`](./conftest.py), escopo `function`).
+Each test uses a new Firefox instance through the `driver` fixture in
+[`conftest.py`](./conftest.py). The suite covers:
 
-Na pipeline, o artifact `test-evidence` inclui screenshots em
-`screenshots/actions/`, numerados pela ordem de execução. Há uma captura após
-cada clique, preenchimento e seleção, além da configuração imediatamente antes
-da navegação para o Facebook. Ele também inclui um MP4 por teste em `videos/`;
-o vídeo do cenário de bloqueio mostra a configuração do grupo, o carregamento
-do Facebook e o modal do Good Block.
+- **TC08:** Facebook stays accessible when the `Work` group is disabled.
+- **TC11:** Facebook displays the Good Block modal when the `Work` group is enabled.
 
-## Estrutura do projeto
+## Failure evidence
 
-```
-project/
-├── requirements.txt
-├── config.py              # caminhos, EXTENSION_PATH, timeouts
-├── conftest.py             # fixture do driver com a extensão instalada
-├── explore.py              # script exploratório para inspecionar o popup
-├── extensions/             # XPI oficial assinado usado pelos testes
-├── good-block-extension-src/  # código-fonte da extensão já extraído
-├── pages/
-│   ├── base_page.py
-│   ├── good_block_popup_page.py
-│   └── blocked_page.py
-└── tests/
-    └── test_good_block.py
-```
+When a test fails, teardown saves a final screenshot, page DOM, and geckodriver
+log. Successful tests do not create evidence files. GitHub Actions uploads
+failure evidence as the `test-evidence` artifact.
 
 ## Troubleshooting
 
-| Problema | Causa provável | Solução |
+| Problem | Likely cause | Solution |
 |---|---|---|
-| `install_addon` falha com erro de assinatura | XPI ausente ou corrompido | Restaure `extensions/good_block-1.0.3.xpi` e execute os testes novamente |
-| Página `moz-extension://...` fica em branco | UUID errado ou extensão ainda não terminou de instalar | Use `BasePage.discover_extension_uuid()` para obter o UUID atual em vez de fixar um valor |
-| `NoSuchElementException` / elemento não encontrado | Seletor placeholder ainda não foi ajustado | Rode `python explore.py` e atualize o locator correspondente no Page Object |
-| `geckodriver` não encontrado / versão incompatível | Driver desatualizado | O projeto usa `webdriver-manager`, que baixa a versão correta automaticamente; se persistir, delete o cache em `~/.wdm` e rode de novo |
-| Extensão não aparece em `about:debugging` | Caminho em `EXTENSION_PATH` incorreto | Confirme em `config.py` que o caminho aponta para uma pasta com `manifest.json` na raiz, ou para um `.xpi` válido |
-| Testes muito lentos ou instáveis no CI | Ambiente gráfico do runner pode afetar o Firefox | A pipeline executa Firefox no Xvfb; localmente o navegador continua visível |
+| `install_addon` reports a signature error | The XPI is missing or corrupt | Restore `extensions/good_block-1.0.3.xpi` and rerun the tests. |
+| The popup remains blank | Firefox has not registered the extension | Confirm the XPI installation completed and retry. |
+| geckodriver is missing | geckodriver is not on `PATH` | Let `webdriver-manager` download it, or install geckodriver locally. |
+| CI is slow or unstable | Firefox needs a display server | The GitHub Actions workflow runs Firefox through Xvfb. |
