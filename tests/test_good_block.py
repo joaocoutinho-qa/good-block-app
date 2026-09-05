@@ -32,7 +32,7 @@ def test_toggle_group(popup_page):
     assert popup_page.is_group_enabled("Trabalho") is False
 
 
-def test_blocked_site_shows_modal(driver, popup_page):
+def test_tc11_complete_blocking_workflow(driver, popup_page):
     popup_page.create_group("Trabalho", [FACEBOOK_DOMAIN])
     assert popup_page.is_group_enabled("Trabalho")
     assert popup_page.has_saved_site("Trabalho", FACEBOOK_DOMAIN)
