@@ -72,6 +72,10 @@ class GoodBlockPopupPage(BasePage):
         self.select_group(name)
         return self.find(self.GROUP_TOGGLE_SWITCH).is_selected()
 
+    def has_saved_site(self, group_name, site):
+        """Retorna se o link está persistido no grupo ativo da extensão."""
+        return self._get_saved_group(group_name).get("sitesList", []).count(site) == 1
+
     def is_group_present(self, name):
         return any(
             name == option.text for option in self.driver.find_elements(*self.GROUP_OPTIONS)
@@ -90,27 +94,26 @@ class GoodBlockPopupPage(BasePage):
 
     def _wait_for_saved_site(self, group_name, site):
         """Espera a gravação do link no storage da extensão antes de navegar."""
-        def is_saved(driver):
-            result = driver.execute_async_script(
-                """
-                const groupName = arguments[0];
-                const site = arguments[1];
-                const done = arguments[arguments.length - 1];
-
-                browser.storage.local.get("groups")
-                    .then(({groups = {}}) => {
-                        const group = groups[groupName];
-                        done(Boolean(group && group.active && group.sitesList.includes(site)));
-                    })
-                    .catch(error => done({error: error.message}));
-                """,
-                group_name,
-                site,
-            )
-            if isinstance(result, dict) and "error" in result:
-                raise RuntimeError(
-                    f"Não foi possível ler o storage da extensão: {result['error']}"
-                )
-            return result
+        def is_saved(_):
+            group = self._get_saved_group(group_name)
+            return group.get("active") and site in group.get("sitesList", [])
 
         self.wait().until(is_saved)
+
+    def _get_saved_group(self, group_name):
+        result = self.driver.execute_async_script(
+            """
+            const groupName = arguments[0];
+            const done = arguments[arguments.length - 1];
+
+            browser.storage.local.get("groups")
+                .then(({groups = {}}) => done(groups[groupName] || null))
+                .catch(error => done({error: error.message}));
+            """,
+            group_name,
+        )
+        if isinstance(result, dict) and "error" in result:
+            raise RuntimeError(
+                f"Não foi possível ler o storage da extensão: {result['error']}"
+            )
+        return result or {}

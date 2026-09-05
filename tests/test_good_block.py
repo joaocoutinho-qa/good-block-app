@@ -11,6 +11,9 @@ from pages.base_page import BasePage
 from pages.good_block_popup_page import GoodBlockPopupPage
 from pages.blocked_page import BlockedPage
 
+FACEBOOK_DOMAIN = "www.facebook.com"
+FACEBOOK_URL = f"https://{FACEBOOK_DOMAIN}/"
+
 
 @pytest.fixture
 def popup_page(driver):
@@ -30,9 +33,11 @@ def test_toggle_group(popup_page):
 
 
 def test_blocked_site_shows_modal(driver, popup_page):
-    popup_page.create_group("Trabalho", ["facebook.com"])
+    popup_page.create_group("Trabalho", [FACEBOOK_DOMAIN])
+    assert popup_page.is_group_enabled("Trabalho")
+    assert popup_page.has_saved_site("Trabalho", FACEBOOK_DOMAIN)
 
-    driver.get("https://facebook.com")
+    driver.get(FACEBOOK_URL)
     blocked = BlockedPage(driver)
 
     assert blocked.is_modal_visible()
