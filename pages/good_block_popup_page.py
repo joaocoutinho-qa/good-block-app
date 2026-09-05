@@ -58,6 +58,7 @@ class GoodBlockPopupPage(BasePage):
         for site in sites:
             self.fill(self.SITE_INPUT, site)
             self.click(self.ADD_SITE_BUTTON)
+            self._wait_for_saved_site(name, site)
         return self
 
     def toggle_group(self, name):
@@ -86,3 +87,30 @@ class GoodBlockPopupPage(BasePage):
         )
         Select(self.find(self.GROUP_SELECT)).select_by_visible_text(name)
         return self
+
+    def _wait_for_saved_site(self, group_name, site):
+        """Espera a gravação do link no storage da extensão antes de navegar."""
+        def is_saved(driver):
+            result = driver.execute_async_script(
+                """
+                const groupName = arguments[0];
+                const site = arguments[1];
+                const done = arguments[arguments.length - 1];
+
+                browser.storage.local.get("groups")
+                    .then(({groups = {}}) => {
+                        const group = groups[groupName];
+                        done(Boolean(group && group.active && group.sitesList.includes(site)));
+                    })
+                    .catch(error => done({error: error.message}));
+                """,
+                group_name,
+                site,
+            )
+            if isinstance(result, dict) and "error" in result:
+                raise RuntimeError(
+                    f"Não foi possível ler o storage da extensão: {result['error']}"
+                )
+            return result
+
+        self.wait().until(is_saved)
