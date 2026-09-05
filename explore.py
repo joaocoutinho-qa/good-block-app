@@ -11,6 +11,7 @@ from selenium import webdriver
 
 import config
 from conftest import _build_service
+from pages.base_page import BasePage
 
 
 
@@ -22,7 +23,10 @@ def main():
     try:
         driver.install_addon(config.EXTENSION_PATH, temporary=True)
 
-        popup_url = f"moz-extension://{config.EXTENSION_UUID}/popup.html"
+        uuid = BasePage.discover_extension_uuid(driver)
+        print(f"UUID da extensão: {uuid}")
+
+        popup_url = f"moz-extension://{uuid}/popup.html"
         driver.get(popup_url)
         print(f"Popup aberto em: {popup_url}")
         print("Abra o DevTools (F12) e inspecione o DOM para descobrir os seletores reais.")

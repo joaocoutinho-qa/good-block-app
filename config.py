@@ -15,11 +15,9 @@ EXTENSION_PATH = os.path.join(BASE_DIR, "good-block-extension-src")
 # descomente a linha abaixo e ajuste o nome do arquivo.
 # EXTENSION_PATH = os.path.join(BASE_DIR, "extensions", "good_block-1.0.3.xpi")
 
-# ID declarado no manifest e UUID estável usado pela origem moz-extension://.
-# Definir o mapeamento no perfil antes de iniciar o Firefox evita depender de
-# about:debugging, que o Selenium Grid não permite abrir.
-EXTENSION_ID = "good-block@lucasandrade.com"
-EXTENSION_UUID = "c069f0cb-7bb2-4ed4-b136-64e634f5eb51"
+# Deixe como None para descobrir o UUID da extensão instalada temporariamente
+# em about:debugging. O Firefox gera esse UUID a cada sessão.
+EXTENSION_ID = None
 
 # Timeouts padrão (em segundos) usados pelos waits explícitos do BasePage.
 DEFAULT_TIMEOUT = 10

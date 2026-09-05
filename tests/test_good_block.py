@@ -7,13 +7,15 @@ ajustados para o DOM real (veja explore.py).
 import pytest
 
 import config
+from pages.base_page import BasePage
 from pages.good_block_popup_page import GoodBlockPopupPage
 from pages.blocked_page import BlockedPage
 
 
 @pytest.fixture
 def popup_page(driver):
-    return GoodBlockPopupPage(driver, config.EXTENSION_UUID).open()
+    uuid = BasePage.discover_extension_uuid(driver)
+    return GoodBlockPopupPage(driver, uuid).open()
 
 
 def test_create_group(popup_page):

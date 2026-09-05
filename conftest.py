@@ -5,10 +5,6 @@ de cada teste para visualização na pipeline de CI (GitHub Actions).
 """
 import os
 import shutil
-import base64
-import json
-import zipfile
-from io import BytesIO
 
 import pytest
 from selenium import webdriver
@@ -44,40 +40,6 @@ def _build_service(log_output=None):
     )
 
 
-def _install_addon(driver, path):
-    """Instala um addon também quando o Firefox é controlado remotamente."""
-    if hasattr(driver, "install_addon"):
-        return driver.install_addon(path, temporary=True)
-
-    if os.path.isdir(path):
-        archive = BytesIO()
-        path = os.path.normpath(path)
-        path_root = len(path) + 1
-        with zipfile.ZipFile(
-            archive,
-            "w",
-            zipfile.ZIP_DEFLATED,
-            strict_timestamps=False,
-        ) as zipped:
-            for base, _, files in os.walk(path):
-                for filename in files:
-                    full_path = os.path.join(base, filename)
-                    zipped.write(full_path, full_path[path_root:])
-        addon = base64.b64encode(archive.getvalue()).decode("utf-8")
-    else:
-        with open(path, "rb") as addon_file:
-            addon = base64.b64encode(addon_file.read()).decode("utf-8")
-
-    driver.command_executor._commands["INSTALL_ADDON"] = (
-        "POST",
-        "/session/$sessionId/moz/addon/install",
-    )
-    return driver.execute(
-        "INSTALL_ADDON",
-        {"addon": addon, "temporary": True},
-    )["value"]
-
-
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Hook do pytest para capturar o resultado de cada fase do teste (call)."""
@@ -89,27 +51,18 @@ def pytest_runtest_makereport(item, call):
 @pytest.fixture(scope="function")
 def driver(request):
     options = webdriver.FirefoxOptions()
-    options.set_preference(
-        "extensions.webextensions.uuids",
-        json.dumps({config.EXTENSION_ID: config.EXTENSION_UUID}),
-    )
+    options.set_preference("fission.autostart", False)
+    options.set_preference("fission.autostart.session", False)
     os.makedirs(DRIVER_LOGS_DIR, exist_ok=True)
     driver_log_path = os.path.join(DRIVER_LOGS_DIR, f"{request.node.name}.log")
 
-    remote_url = os.getenv("SELENIUM_REMOTE_URL")
-    if remote_url:
-        firefox_driver = webdriver.Remote(
-            command_executor=remote_url,
-            options=options,
-        )
-    else:
-        service = _build_service(driver_log_path)
-        firefox_driver = webdriver.Firefox(service=service, options=options)
+    service = _build_service(driver_log_path)
+    firefox_driver = webdriver.Firefox(service=service, options=options)
 
     # Instala a extensão em tempo de execução
-    firefox_driver.extension_id = _install_addon(
-        firefox_driver,
+    firefox_driver.extension_id = firefox_driver.install_addon(
         config.EXTENSION_PATH,
+        temporary=True,
     )
 
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
