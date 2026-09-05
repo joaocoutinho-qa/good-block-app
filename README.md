@@ -37,20 +37,16 @@ funciona normalmente.
      `good-block-extension-src` e descomente a linha que aponta para o
      `.xpi` em `extensions/`.
 
-### Descobrindo o ID real da extensão a partir do `.xpi`
+### ID e UUID da extensão
 
-Um arquivo `.xpi` é um `.zip` renomeado. Para inspecionar o `manifest.json`:
+O projeto configura um UUID estável para a extensão no perfil do Firefox,
+antes de instalar o addon. Isso permite abrir o popup em
+`moz-extension://` tanto localmente quanto no Selenium Grid, sem navegar a
+`about:debugging` (uma página bloqueada pelo Grid).
 
-```powershell
-Copy-Item extensions\good_block-1.0.3.xpi extensions\good_block.zip
-Expand-Archive extensions\good_block.zip -DestinationPath extensions\good_block_extracted
-```
-
-Abra `extensions\good_block_extracted\manifest.json` e procure por
-`browser_specific_settings.gecko.id`. A Good Block **não declara** esse
-campo, então o Firefox gera um ID temporário (`...@temporary-addon`) a
-cada instalação — por isso o projeto descobre o UUID dinamicamente via
-`about:debugging` (veja `BasePage.discover_extension_uuid`).
+O ID e UUID estão definidos em [`config.py`](./config.py) como
+`EXTENSION_ID` e `EXTENSION_UUID`. O valor do ID precisa corresponder a
+`browser_specific_settings.gecko.id` no `manifest.json`.
 
 ## Ajustando os seletores reais
 
@@ -104,7 +100,7 @@ project/
 | Problema | Causa provável | Solução |
 |---|---|---|
 | `install_addon` falha com erro de assinatura | Extensão não assinada e `temporary=True` não foi passado | Confirme que está chamando `driver.install_addon(path, temporary=True)` |
-| Página `moz-extension://...` fica em branco | UUID errado ou extensão ainda não terminou de instalar | Use `BasePage.discover_extension_uuid()` para pegar o UUID atual em vez de fixar um valor; adicione uma pequena espera após `install_addon` |
+| Página `moz-extension://...` fica em branco | Mapeamento do UUID não corresponde ao ID do manifest | Confirme que `EXTENSION_ID` corresponde ao `browser_specific_settings.gecko.id` e mantenha o mesmo `EXTENSION_UUID` em `config.py` |
 | `NoSuchElementException` / elemento não encontrado | Seletor placeholder ainda não foi ajustado | Rode `python explore.py` e atualize o locator correspondente no Page Object |
 | `geckodriver` não encontrado / versão incompatível | Driver desatualizado | O projeto usa `webdriver-manager`, que baixa a versão correta automaticamente; se persistir, delete o cache em `~/.wdm` e rode de novo |
 | Extensão não aparece em `about:debugging` | Caminho em `EXTENSION_PATH` incorreto | Confirme em `config.py` que o caminho aponta para uma pasta com `manifest.json` na raiz, ou para um `.xpi` válido |

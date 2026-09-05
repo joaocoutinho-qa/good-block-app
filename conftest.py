@@ -6,6 +6,7 @@ de cada teste para visualização na pipeline de CI (GitHub Actions).
 import os
 import shutil
 import base64
+import json
 import zipfile
 from io import BytesIO
 
@@ -88,6 +89,10 @@ def pytest_runtest_makereport(item, call):
 @pytest.fixture(scope="function")
 def driver(request):
     options = webdriver.FirefoxOptions()
+    options.set_preference(
+        "extensions.webextensions.uuids",
+        json.dumps({config.EXTENSION_ID: config.EXTENSION_UUID}),
+    )
     os.makedirs(DRIVER_LOGS_DIR, exist_ok=True)
     driver_log_path = os.path.join(DRIVER_LOGS_DIR, f"{request.node.name}.log")
 
@@ -102,8 +107,10 @@ def driver(request):
         firefox_driver = webdriver.Firefox(service=service, options=options)
 
     # Instala a extensão em tempo de execução
-    extension_id = _install_addon(firefox_driver, config.EXTENSION_PATH)
-    firefox_driver.extension_id = extension_id
+    firefox_driver.extension_id = _install_addon(
+        firefox_driver,
+        config.EXTENSION_PATH,
+    )
 
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
     os.makedirs(DOM_DIR, exist_ok=True)
@@ -112,8 +119,14 @@ def driver(request):
 
     # Tirar screenshot ao final do teste (tanto para sucesso quanto para falha)
     test_name = request.node.name
+    rep_setup = getattr(request.node, "rep_setup", None)
     rep_call = getattr(request.node, "rep_call", None)
-    status = "FAILED" if (rep_call and rep_call.failed) else "PASSED"
+    if rep_setup and rep_setup.failed:
+        status = "ERROR"
+    elif rep_call and rep_call.failed:
+        status = "FAILED"
+    else:
+        status = "PASSED"
     screenshot_path = os.path.join(SCREENSHOTS_DIR, f"{test_name}_{status}.png")
     dom_path = os.path.join(DOM_DIR, f"{test_name}_{status}.html")
 
