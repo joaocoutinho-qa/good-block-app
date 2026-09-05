@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  setup:
+    name: Setup environment
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,17 +44,183 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests for Good Block app
-        run: |
-          xvfb-run --auto-servernum pytest -v
+      - name: Setup summary
+        run: echo "Environment ready for the parallel acceptance tests." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload test evidence
-        uses: actions/upload-artifact@v4
-        if: always()
+  test_tc03:
+    name: TC03 - Allow access for disabled category
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          name: test-evidence
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Firefox ESR
+        uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: latest-esr
+
+      - name: Install geckodriver
+        uses: browser-actions/setup-geckodriver@latest
+        with:
+          geckodriver-version: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run TC03
+        run: xvfb-run --auto-servernum pytest -q tests/test_good_block.py -k TC03
+
+      - name: Upload TC03 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tc03-evidence
           path: |
             screenshots/
             dom/
             driver-logs/
           if-no-files-found: ignore
+
+  test_tc05:
+    name: TC05 - Remove URL and validate blocking rules
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Firefox ESR
+        uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: latest-esr
+
+      - name: Install geckodriver
+        uses: browser-actions/setup-geckodriver@latest
+        with:
+          geckodriver-version: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run TC05
+        run: xvfb-run --auto-servernum pytest -q tests/test_good_block.py -k TC05
+
+      - name: Upload TC05 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tc05-evidence
+          path: |
+            screenshots/
+            dom/
+            driver-logs/
+          if-no-files-found: ignore
+
+  test_tc06:
+    name: TC06 - Complete blocking workflow
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Firefox ESR
+        uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: latest-esr
+
+      - name: Install geckodriver
+        uses: browser-actions/setup-geckodriver@latest
+        with:
+          geckodriver-version: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run TC06
+        run: xvfb-run --auto-servernum pytest -q tests/test_good_block.py -k TC06
+
+      - name: Upload TC06 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tc06-evidence
+          path: |
+            screenshots/
+            dom/
+            driver-logs/
+          if-no-files-found: ignore
+
+  evidence_report_finalize:
+    name: Evidence, report and finalization
+    needs: [test_tc03, test_tc05, test_tc06]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all evidence artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-evidence'
+          path: artifacts
+          merge-multiple: true
+
+      - name: Write final summary
+        run: |
+          mkdir -p report
+          {
+            echo "# Good Block acceptance report";
+            echo "";
+            echo "- TC03: ${{ needs.test_tc03.result }}";
+            echo "- TC05: ${{ needs.test_tc05.result }}";
+            echo "- TC06: ${{ needs.test_tc06.result }}";
+          } > report/summary.md
+          cat report/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload consolidated evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: consolidated-evidence
+          path: artifacts/
+          if-no-files-found: ignore
+
+      - name: Final status gate
+        run: |
+          if [ "${{ needs.test_tc03.result }}" != "success" ] || [ "${{ needs.test_tc05.result }}" != "success" ] || [ "${{ needs.test_tc06.result }}" != "success" ]; then
+            echo "One or more acceptance tests failed." && exit 1
+          fi
+          echo "All acceptance tests passed."
