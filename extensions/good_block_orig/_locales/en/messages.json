@@ -1,0 +1,17 @@
+{
+  "greeting": {
+    "message": "Hello, World!"
+  },
+  "appName": {
+    "message": "Good Block",
+    "description": "This extension blocks websites for you."
+  },
+  "appShortName": {
+    "message": "Good Block",
+    "description": "This extension blocks websites for you."
+  },
+  "appDesc": {
+    "message": "This extension blocks websites for you.",
+    "description": "This extension blocks websites for you."
+  }
+}
