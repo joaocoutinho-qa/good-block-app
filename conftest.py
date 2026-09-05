@@ -5,6 +5,8 @@ de cada teste para visualização na pipeline de CI (GitHub Actions).
 """
 import os
 import shutil
+import subprocess
+from pathlib import Path
 
 import pytest
 from selenium import webdriver
@@ -40,6 +42,51 @@ def _build_service(log_output=None):
     )
 
 
+def _create_action_video(test_name):
+    """Converte as capturas sequenciais de um teste em um vídeo MP4."""
+    frames = sorted(
+        Path(config.ACTION_SCREENSHOTS_DIR).glob(f"{test_name}_*.png")
+    )
+    if not frames:
+        return
+
+    os.makedirs(config.VIDEOS_DIR, exist_ok=True)
+    concat_file = Path(config.VIDEOS_DIR, f"{test_name}.txt")
+    video_path = Path(config.VIDEOS_DIR, f"{test_name}.mp4")
+
+    with concat_file.open("w", encoding="utf-8", newline="\n") as file:
+        for frame in frames:
+            file.write(f"file '{frame.resolve().as_posix()}'\n")
+            file.write("duration 1\n")
+        file.write(f"file '{frames[-1].resolve().as_posix()}'\n")
+
+    try:
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                str(concat_file),
+                "-vf",
+                "fps=2,format=yuv420p",
+                "-movflags",
+                "+faststart",
+                str(video_path),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    finally:
+        concat_file.unlink(missing_ok=True)
+
+    print(f"\n[Vídeo das ações salvo]: {video_path}")
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Hook do pytest para capturar o resultado de cada fase do teste (call)."""
@@ -67,6 +114,7 @@ def driver(request):
 
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
     os.makedirs(config.ACTION_SCREENSHOTS_DIR, exist_ok=True)
+    os.makedirs(config.VIDEOS_DIR, exist_ok=True)
     os.makedirs(DOM_DIR, exist_ok=True)
     firefox_driver.action_screenshot_index = 0
     firefox_driver.action_screenshot_test_name = request.node.name
@@ -90,9 +138,8 @@ def driver(request):
         firefox_driver.save_screenshot(screenshot_path)
         with open(dom_path, "w", encoding="utf-8") as dom_file:
             dom_file.write(firefox_driver.page_source)
+        _create_action_video(test_name)
         print(f"\n[Screenshot salvo]: {screenshot_path}")
         print(f"[DOM salvo]: {dom_path}")
-    except Exception as e:
-        print(f"\n[Erro ao salvar screenshot]: {e}")
-
-    firefox_driver.quit()
+    finally:
+        firefox_driver.quit()

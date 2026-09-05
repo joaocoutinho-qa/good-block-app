@@ -5,6 +5,7 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ACTION_SCREENSHOTS_DIR = os.path.join(BASE_DIR, "screenshots", "actions")
+VIDEOS_DIR = os.path.join(BASE_DIR, "videos")
 
 # Caminho para a extensão Good Block. Pode ser:
 #  - uma pasta com o código-fonte extraído (manifest.json na raiz), ou

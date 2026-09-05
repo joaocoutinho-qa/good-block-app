@@ -74,7 +74,9 @@ uma instância limpa do Firefox por teste (fixture `driver` em
 Na pipeline, o artifact `test-evidence` inclui screenshots em
 `screenshots/actions/`, numerados pela ordem de execução. Há uma captura após
 cada clique, preenchimento e seleção, além da configuração imediatamente antes
-da navegação para o Facebook.
+da navegação para o Facebook. Ele também inclui um MP4 por teste em `videos/`;
+o vídeo do cenário de bloqueio mostra a configuração do grupo, o carregamento
+do Facebook e o modal do Good Block.
 
 ## Estrutura do projeto
 

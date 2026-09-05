@@ -40,6 +40,8 @@ def test_blocked_site_shows_modal(driver, popup_page):
 
     driver.get(FACEBOOK_URL)
     blocked = BlockedPage(driver)
+    blocked.capture_screenshot("facebook-loaded")
 
     assert blocked.is_modal_visible()
+    blocked.capture_screenshot("good-block-modal-visible")
     assert blocked.get_motivational_message() != ""
