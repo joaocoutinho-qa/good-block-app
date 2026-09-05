@@ -10,6 +10,7 @@ explore.py (na raiz do projeto) para abrir o popup, inspecionar a
 estrutura real via DevTools, e então substituir os locators abaixo.
 """
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
 
 from pages.base_page import BasePage
 
@@ -19,13 +20,20 @@ class GoodBlockPopupPage(BasePage):
 
     # O popup inicial exibe a criação de grupo como o controle circular "+".
     ADD_GROUP_BUTTON = (By.CSS_SELECTOR, "div[color='green']")
-    # --- PLACEHOLDERS: ajustar após inspecionar o DOM real com explore.py ---
-    GROUP_NAME_INPUT = (By.CSS_SELECTOR, "input[name='groupName']")
-    SITES_TEXTAREA = (By.CSS_SELECTOR, "textarea[name='sites']")
-    SAVE_GROUP_BUTTON = (By.XPATH, "//button[contains(text(), 'Save')]")
-    GROUP_LIST_ITEM = (By.CSS_SELECTOR, ".group-item")
-    GROUP_TOGGLE_SWITCH = (By.CSS_SELECTOR, ".group-item .toggle-switch")
-    GROUP_NAME_LABEL = (By.CSS_SELECTOR, ".group-item .group-name")
+    GROUP_NAME_INPUT = (
+        By.CSS_SELECTOR,
+        "input[placeholder='Group name (no spaces)']",
+    )
+    CREATE_GROUP_BUTTON = (By.XPATH, "//button[normalize-space()='Add Group']")
+    GROUP_SELECT = (By.CSS_SELECTOR, "select")
+    GROUP_OPTIONS = (By.CSS_SELECTOR, "select option")
+    SITE_INPUT = (
+        By.CSS_SELECTOR,
+        "input[placeholder='link, example: linkname.com']",
+    )
+    ADD_SITE_BUTTON = (By.XPATH, "//button[normalize-space()='Add Link']")
+    GROUP_TOGGLE_SWITCH = (By.CSS_SELECTOR, "input[type='checkbox']")
+    GROUP_TOGGLE_LABEL = (By.CSS_SELECTOR, "label[for='checkbox']")
     # --------------------------------------------------------------------
 
     def __init__(self, driver, uuid):
@@ -40,28 +48,41 @@ class GoodBlockPopupPage(BasePage):
     def create_group(self, name, sites):
         """
         Cria um novo grupo de bloqueio.
-        `sites` pode ser uma lista de domínios (ex.: ["facebook.com", "twitter.com"]).
+        Cria o grupo, seleciona-o e adiciona cada domínio informado.
         """
         self.click(self.ADD_GROUP_BUTTON)
         self.fill(self.GROUP_NAME_INPUT, name)
-        self.fill(self.SITES_TEXTAREA, "\n".join(sites))
-        self.click(self.SAVE_GROUP_BUTTON)
+        self.click(self.CREATE_GROUP_BUTTON)
+
+        self.select_group(name)
+        for site in sites:
+            self.fill(self.SITE_INPUT, site)
+            self.click(self.ADD_SITE_BUTTON)
         return self
 
     def toggle_group(self, name):
         """Ativa/desativa o grupo com o nome informado."""
-        group_item = self._find_group_item(name)
-        toggle = group_item.find_element(*self.GROUP_TOGGLE_SWITCH)
-        toggle.click()
+        self.select_group(name)
+        self.click(self.GROUP_TOGGLE_LABEL)
         return self
+
+    def is_group_enabled(self, name):
+        """Retorna o estado do toggle do grupo informado."""
+        self.select_group(name)
+        return self.find(self.GROUP_TOGGLE_SWITCH).is_selected()
 
     def is_group_present(self, name):
         return any(
-            name in item.text for item in self.driver.find_elements(*self.GROUP_LIST_ITEM)
+            name == option.text for option in self.driver.find_elements(*self.GROUP_OPTIONS)
         )
 
-    def _find_group_item(self, name):
-        for item in self.driver.find_elements(*self.GROUP_LIST_ITEM):
-            if name in item.text:
-                return item
-        raise ValueError(f"Grupo '{name}' não encontrado na lista de grupos.")
+    def select_group(self, name):
+        """Seleciona um grupo depois que ele estiver disponível no popup."""
+        self.wait().until(
+            lambda driver: any(
+                name == option.text
+                for option in driver.find_elements(*self.GROUP_OPTIONS)
+            )
+        )
+        Select(self.find(self.GROUP_SELECT)).select_by_visible_text(name)
+        return self

@@ -25,8 +25,7 @@ def test_create_group(popup_page):
 def test_toggle_group(popup_page):
     popup_page.create_group("Trabalho", ["facebook.com"])
     popup_page.toggle_group("Trabalho")
-    # TODO: após ajustar os seletores reais, validar o estado do toggle
-    # (ex.: popup_page.is_group_enabled("Trabalho") is False)
+    assert popup_page.is_group_enabled("Trabalho") is False
 
 
 def test_blocked_site_shows_modal(driver, popup_page):
