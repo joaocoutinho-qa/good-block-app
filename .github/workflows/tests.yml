@@ -80,14 +80,15 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run integration tests
-        run: xvfb-run --auto-servernum pytest -q tests/integration
+        run: xvfb-run --auto-servernum pytest --alluredir=allure-results/integration -q tests/integration
 
-      - name: Upload integration evidence
+      - name: Upload integration evidence and allure
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: integration-evidence
+          name: integration-allure-results
           path: |
+            allure-results/integration/
             screenshots/
             dom/
             driver-logs/
@@ -126,14 +127,15 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run e2e tests
-        run: xvfb-run --auto-servernum pytest -q tests/e2e
+        run: xvfb-run --auto-servernum pytest --alluredir=allure-results/e2e -q tests/e2e
 
-      - name: Upload e2e evidence
+      - name: Upload e2e evidence and allure
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-evidence
+          name: e2e-allure-results
           path: |
+            allure-results/e2e/
             screenshots/
             dom/
             driver-logs/
@@ -151,19 +153,43 @@ jobs:
         if: always()
         uses: actions/download-artifact@v4
         with:
-          pattern: '*-evidence'
+          pattern: '*-allure-results'
           path: artifacts
           merge-multiple: true
+
+      - name: Install Allure CLI
+        if: always()
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-jre
+          wget -q https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-commandline-2.29.0.tgz -O allure.tgz
+          mkdir -p /opt/allure
+          tar -xzf allure.tgz -C /opt/allure --strip-components=1
+          sudo ln -sf /opt/allure/bin/allure /usr/local/bin/allure
+          allure --version
+
+      - name: Generate Allure report
+        if: always()
+        run: |
+          mkdir -p report
+          if [ -d "artifacts" ] && [ -n "$(find artifacts -maxdepth 2 -type d -name 'allure-results' -o -path 'artifacts/*' -type d | head -n 1)" ]; then
+            mkdir -p allure-results
+            find artifacts -type d -name 'allure-results' -exec cp -R {}/* allure-results/ \; 2>/dev/null || true
+            allure generate allure-results --clean -o allure-report
+            cp -R allure-report report/
+          else
+            echo "No Allure results were produced." > report/summary.md
+          fi
 
       - name: Write final summary
         if: always()
         run: |
-          mkdir -p report
           {
             echo "# Good Block acceptance report";
             echo "";
             echo "- integration: ${{ needs.integration_tests.result }}";
             echo "- e2e: ${{ needs.e2e_tests.result }}";
+            echo "- allure report: generated in the consolidated artifact";
           } > report/summary.md
           cat report/summary.md >> "$GITHUB_STEP_SUMMARY"
 
@@ -175,6 +201,7 @@ jobs:
           path: |
             artifacts/
             report/
+            allure-report/
           if-no-files-found: ignore
 
       - name: Final status gate
