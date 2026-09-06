@@ -181,7 +181,10 @@ jobs:
 
           if [ -n "$(find merged-allure-results -type f | head -n 1)" ]; then
             allure generate merged-allure-results --clean -o allure-report
+            mkdir -p report
             cp -R allure-report report/
+            cp report/allure-report/index.html report/report.html
+            cp report/allure-report/index.html report.html
           else
             echo "No Allure results were produced." > report/summary.md
           fi
@@ -206,6 +209,7 @@ jobs:
           path: |
             artifacts/
             report/
+            report.html
             allure-report/
           if-no-files-found: ignore
 
