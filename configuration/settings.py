@@ -12,7 +12,7 @@ EXTENSION_PATH = os.getenv(
 )
 
 # Keep the target host without protocol in settings; add https only when navigating.
-TEST_URL = os.getenv("TEST_URL", "www.facebook.com")
+TEST_URL = os.getenv("TEST_URL", "www.example.com")
 
 # Timeouts in seconds used by BasePage explicit waits.
 DEFAULT_TIMEOUT = 10
