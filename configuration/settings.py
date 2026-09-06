@@ -12,7 +12,7 @@ EXTENSION_PATH = os.getenv(
 )
 
 # Simple configuration: just set the URL to test and use it directly.
-TEST_URL = os.getenv("TEST_URL", "https://www.facebook.com/")
+TEST_URL = os.getenv("TEST_URL", "www.facebook.com")
 
 # Timeouts in seconds used by BasePage explicit waits.
 DEFAULT_TIMEOUT = 10
