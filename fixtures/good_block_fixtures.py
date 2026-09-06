@@ -12,7 +12,7 @@ def create_group_data():
     def _factory(prefix="good-block", sites=None):
         from fixtures.data_factory import create_unique_group_name
 
-        resolved_sites = list(sites or [settings.FACEBOOK_DOMAIN])
+        resolved_sites = list(sites or [settings.TEST_URL])
         return {
             "group_name": create_unique_group_name(prefix),
             "sites": resolved_sites,
@@ -33,7 +33,7 @@ def create_group(open_good_block_extension):
     """Create a group in Good Block extension before each scenario."""
 
     def _factory(group_name, sites=None):
-        resolved_sites = list(sites or [settings.FACEBOOK_DOMAIN])
+        resolved_sites = list(sites or [settings.TEST_URL])
         open_good_block_extension.create_group(group_name, resolved_sites)
         open_good_block_extension.verify_group_is_enabled(group_name)
         for site in resolved_sites:
