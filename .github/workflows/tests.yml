@@ -146,6 +146,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all evidence artifacts
+        id: download_evidence
+        continue-on-error: true
+        if: always()
         uses: actions/download-artifact@v4
         with:
           pattern: '*-evidence'
@@ -153,6 +156,7 @@ jobs:
           merge-multiple: true
 
       - name: Write final summary
+        if: always()
         run: |
           mkdir -p report
           {
@@ -164,11 +168,13 @@ jobs:
           cat report/summary.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload consolidated evidence
-        uses: actions/upload-artifact@v4
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: consolidated-evidence
-          path: artifacts/
+          path: |
+            artifacts/
+            report/
           if-no-files-found: ignore
 
       - name: Final status gate
