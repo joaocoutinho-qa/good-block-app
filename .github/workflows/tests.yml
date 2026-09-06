@@ -173,7 +173,7 @@ jobs:
           mkdir -p report merged-allure-results
 
           find artifacts -type d -name 'allure-results' -print0 | while IFS= read -r -d '' result_dir; do
-            cp -R "$result_dir"/. merged-allure-results/
+            find "$result_dir" -type f -name '*.json' -exec cp -f {} merged-allure-results/ \;
           done
 
           if [ -n "$(find merged-allure-results -type f | head -n 1)" ]; then
