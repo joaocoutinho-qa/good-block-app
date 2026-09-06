@@ -38,8 +38,10 @@ configuration/      Environment-backed settings and shared constants
 extensions/         Signed Firefox extension package
 pages/              Base helpers and the Good Block page object
 tests/
+  conftest.py       Shared test fixtures for Good Block setup and data factories
   integration/      TC03 and TC05 acceptance checks
   e2e/              TC06 end-to-end workflow validation
+fixtures/           Shared helper modules and reusable test data factories
 .github/workflows/ GitHub Actions workflows
 ```
 

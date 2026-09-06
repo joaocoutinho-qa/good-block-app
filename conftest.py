@@ -3,17 +3,14 @@ Pytest fixtures and evidence helpers for Good Block browser tests.
 """
 import os
 import shutil
-
 import pytest
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
-
 from configuration import settings
 
 SCREENSHOTS_DIR = os.path.join(settings.PROJECT_ROOT, "screenshots")
 DOM_DIR = os.path.join(settings.PROJECT_ROOT, "dom")
 DRIVER_LOGS_DIR = os.path.join(settings.PROJECT_ROOT, "driver-logs")
-
 
 def _build_service(log_output=None):
     """Use geckodriver from PATH when available; otherwise use webdriver-manager."""
