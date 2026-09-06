@@ -161,7 +161,7 @@ jobs:
         if: always()
         run: |
           mkdir -p "$RUNNER_TEMP/allure"
-          curl -fsSL https://github.com/allure-framework/allure2/releases/download/2.29.0/allure-commandline-2.29.0.tgz -o "$RUNNER_TEMP/allure/allure.tgz"
+          curl -fsSL https://github.com/allure-framework/allure2/releases/download/2.46.1/allure-2.46.1.tgz -o "$RUNNER_TEMP/allure/allure.tgz"
           tar -xzf "$RUNNER_TEMP/allure/allure.tgz" -C "$RUNNER_TEMP/allure" --strip-components=1
           chmod +x "$RUNNER_TEMP/allure/bin/allure"
           echo "$RUNNER_TEMP/allure/bin" >> "$GITHUB_PATH"
