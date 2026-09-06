@@ -177,7 +177,11 @@ jobs:
           done
 
           if [ -n "$(find merged-allure-results -type f | head -n 1)" ]; then
+            rm -rf report
             allure generate merged-allure-results --clean -o report
+            test -f report/index.html
+            echo "Generated report tree:"
+            find report -maxdepth 2 -type f | sort | head -n 20
           else
             echo "No Allure results were produced." > report/summary.md
           fi
