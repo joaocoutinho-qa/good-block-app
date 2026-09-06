@@ -12,6 +12,6 @@ pytestmark = [
 def test_01_complete_blocking_workflow(create_group, create_group_data):
     group = create_group_data(prefix="tc01")
     page = create_group(group["group_name"], group["sites"])
-    page.go_to(settings.TEST_URL)
+    page.go_to(f"https://{settings.TEST_URL}")
     page.verify_site_is_blocked()
     page.verify_motivational_message_is_present()
