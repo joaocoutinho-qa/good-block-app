@@ -2,7 +2,8 @@
 import allure
 from configuration import settings
 
-@allure.suite("E2E Tests")
+@allure.parent_suite("Good Block - Functional Tests")
+@allure.suite("End-to-End Tests")
 @allure.feature("Website blocking flow")
 @allure.title("TC01 - Complete blocking workflow")
 def test_TC01_complete_blocking_workflow(ready_group_page, group_data_factory):

@@ -2,6 +2,7 @@
 import allure
 from configuration import settings
 
+@allure.parent_suite("Good Block - Functional Tests")
 @allure.suite("Integration Tests")
 @allure.feature("Rule and persistence checks")
 @allure.title("TC01 - Allow access for disabled category")
@@ -11,6 +12,7 @@ def test_TC01_allow_access_for_disabled_category(ready_group_page,group_data_fac
     page.toggle_group(group["group_name"]).go_to(settings.FACEBOOK_URL)
     page.verify_site_is_not_blocked()
 
+@allure.parent_suite("Good Block - Functional Tests")
 @allure.suite("Integration Tests")
 @allure.feature("Rule and persistence checks")
 @allure.title("TC02 - Propagate URL removal to blocking rules")

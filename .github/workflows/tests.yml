@@ -79,7 +79,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run integration tests
+      - name: Run Integration tests
         run: xvfb-run --auto-servernum pytest --alluredir=allure-results/integration -q tests/integration
 
       - name: Upload integration evidence and allure
@@ -95,7 +95,7 @@ jobs:
           if-no-files-found: ignore
 
   e2e_tests:
-    name: End-to-end suite
+    name: End-to-End test suite
     needs: setup
     runs-on: ubuntu-latest
     steps:
@@ -126,10 +126,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run e2e tests
+      - name: Run End-to-End tests
         run: xvfb-run --auto-servernum pytest --alluredir=allure-results/e2e -q tests/e2e
 
-      - name: Upload e2e evidence and allure
+      - name: Upload E2E evidence and allure
         if: always()
         uses: actions/upload-artifact@v4
         with:
