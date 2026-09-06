@@ -1,12 +1,36 @@
-# Python
+# Python runtime and virtual environments
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
 .venv/
 venv/
-.env
+env/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage.xml
+.coverage
+htmlcov/
+*.egg-info/
 
-# Selenium / geckodriver
-extensions/*.xpi
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+
+# Test and report artifacts
+allure-results/
+allure-report/
+report/
+*.log
 screenshots/
 dom/
 driver-logs/
+
+# IDE/editor artifacts
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

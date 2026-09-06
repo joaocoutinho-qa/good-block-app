@@ -48,7 +48,7 @@ jobs:
         run: echo "Environment ready for the parallel acceptance tests." >> "$GITHUB_STEP_SUMMARY"
 
   integration_tests:
-    name: Integration suite
+    name: Integration test suite
     needs: setup
     runs-on: ubuntu-latest
     steps:
@@ -95,7 +95,7 @@ jobs:
           if-no-files-found: ignore
 
   e2e_tests:
-    name: End-to-End test suite
+    name: E2E test suite
     needs: setup
     runs-on: ubuntu-latest
     steps:
@@ -142,7 +142,7 @@ jobs:
           if-no-files-found: ignore
 
   evidence_report_finalize:
-    name: Evidence, report and finalization
+    name: Evidences and report
     needs: [integration_tests, e2e_tests]
     if: always()
     runs-on: ubuntu-latest
@@ -192,11 +192,11 @@ jobs:
         if: always()
         run: |
           {
-            echo "# Good Block acceptance report";
+            echo "# Good Block test report";
             echo "";
-            echo "- integration: ${{ needs.integration_tests.result }}";
-            echo "- e2e: ${{ needs.e2e_tests.result }}";
-            echo "- allure report: available at good-block-report.html";
+            echo "- Integration test suite: ${{ needs.integration_tests.result }}";
+            echo "- E2E test suite: ${{ needs.e2e_tests.result }}";
+            echo "- Allure report: available at good-block-report.html";
           } > good-block-report.summary.md
           cat good-block-report.summary.md >> "$GITHUB_STEP_SUMMARY"
 

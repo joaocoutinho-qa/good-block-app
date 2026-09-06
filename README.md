@@ -1,99 +1,119 @@
 # Good Block Automation
 
-End-to-end automation for the Firefox **Good Block** extension using Selenium,
-geckodriver, pytest, and the Page Object Model.
+Python + Selenium automation for the Firefox Good Block extension.
 
-## Requirements
+## Overview
 
-- Python 3.12 or later
-- Firefox
-- geckodriver available on `PATH`, or an internet connection so
-  `webdriver-manager` can download it
+This project covers the functional test suite for the Firefox Good Block extension using pytest and the Page Object Model.
 
-## Setup
+Current tests coverage:
+- TC01 — allow access for a disabled category
+- TC02 — propagate URL removal to blocking rules
+- TC01 — complete blocking workflow
 
-1. Create and activate a virtual environment.
-
-   ```powershell
-   python -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   ```
-
-2. Install the project dependencies.
-
-   ```powershell
-   pip install -r requirements.txt
-   ```
-
-3. Ensure the signed extension package exists:
-
-   [`extensions/good_block-1.0.3.xpi`](./extensions/good_block-1.0.3.xpi)
-
-The extension is installed into a clean Firefox profile for each test run.
+The suite is split into:
+- `tests/integration` for integration-layer functional checks
+- `tests/e2e` for end-to-end workflow validation
 
 ## Project structure
 
 ```text
-configuration/      Environment-backed settings and shared constants
-extensions/         Signed Firefox extension package
-pages/              Base helpers and the Good Block page object
-tests/
-  conftest.py       Shared test fixtures for Good Block setup and data factories
-  integration/      TC03 and TC05 acceptance checks
-  e2e/              TC06 end-to-end workflow validation
-fixtures/           Shared helper modules and reusable test data factories
-.github/workflows/ GitHub Actions workflows
+good-block-automation/
+├── .github/
+│   └── workflows/
+│       └── tests.yml
+├── configuration/
+│   └── settings.py
+├── extensions/
+│   └── good_block-1.0.3.xpi
+├── fixtures/
+│   ├── __init__.py
+│   ├── data_factory.py
+│   └── good_block_fixtures.py
+├── pages/
+│   ├── base_page.py
+│   └── good_block_page.py
+├── tests/
+│   ├── conftest.py
+│   ├── e2e/
+│   │   └── test_e2e.py
+│   └── integration/
+│       └── test_integration.py
+├── .gitignore
+├── conftest.py
+├── pytest.ini
+├── README.md
+├── requirements.txt
+└── .env.example
 ```
 
-## Test execution flow
+## Requirements
 
-The GitHub Actions pipeline is organized in four stages:
+- Python 3.12+
+- Firefox
+- geckodriver available on `PATH`
+- Optional: Xvfb for headless/browser CI execution
 
-1. **Setup**: installs Python, Firefox, geckodriver, and the test dependencies.
-2. **Parallel suite execution**: runs these folders in parallel:
-   - `tests/integration` → **TC03** and **TC05**
-   - `tests/e2e` → **TC06**
-3. **Evidence collection**: uploads screenshots, DOM dumps, and driver logs for every suite job.
-4. **Report and finalization**: merges Allure results, publishes a single-file report, and fails the workflow if either suite fails.
+## Setup
 
-The generated report artifact is named `good-block-report.html` and can be opened directly in a browser without starting a local server.
-
-## Run the tests locally
+1. Create and activate the virtual environment:
 
 ```powershell
-pytest -v tests/integration tests/e2e
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
-The suite uses a new Firefox instance per test through the `driver` fixture in
-[`conftest.py`](./conftest.py).
+2. Install dependencies:
 
-## Acceptance coverage
+```powershell
+pip install -r requirements.txt
+```
 
-The current suite covers:
+3. Ensure the signed extension exists:
 
-- **TC03 — Allow access for disabled category**: Facebook remains accessible when the configured group is disabled.
-- **TC05 — Propagate URL removal to blocking rules**: removing a URL updates the blocking rules and unblocks the page.
-- **TC06 — Complete blocking workflow**: the block modal appears and the motivational message is shown while the group is enabled.
+```text
+extensions/good_block-1.0.3.xpi
+```
 
-## Allure report
+## Run locally
 
-Each CI run generates a consolidated Allure report that includes the `integration` and `e2e` suites together. The final artifact is exported as:
+Run all functional checks:
 
+```powershell
+pytest -q tests/integration tests/e2e
+```
+
+Run a specific suite:
+
+```powershell
+pytest -q tests/integration
+pytest -q tests/e2e
+```
+
+## CI flow
+
+The pipeline is organized in three stages:
+
+1. Setup environment
+2. Run `tests/integration` and `tests/e2e` in parallel
+3. Merge Allure results and publish the final HTML report
+
+The final artifact is:
 - `good-block-report.html`
 
-This is a single-file HTML report so it can be opened directly from the downloaded artifact without running a local HTTP server.
+This is a single-file HTML report that can be opened directly in a browser.
 
 ## Failure evidence
 
-When a test fails, teardown saves a final screenshot, page DOM, and geckodriver
-log. Successful runs do not keep evidence files. GitHub Actions uploads the
-artifacts generated by the failing or completed test jobs for review.
+When a test fails, the driver fixture saves:
+- screenshot
+- DOM dump
+- geckodriver log
 
-## Troubleshooting
+These artifacts are uploaded by the GitHub Actions workflow for debugging.
 
-| Problem | Likely cause | Solution |
-|---|---|---|
-| `install_addon` reports a signature error | The XPI is missing or corrupt | Restore `extensions/good_block-1.0.3.xpi` and rerun the tests. |
-| The popup remains blank | Firefox has not registered the extension | Confirm the XPI installation completed and retry. |
-| geckodriver is missing | geckodriver is not on `PATH` | Let `webdriver-manager` download it, or install geckodriver locally. |
-| CI is slow or unstable | Firefox needs a display server | The GitHub Actions workflow runs Firefox through Xvfb. |
+## Notes
+
+- The root [`conftest.py`](./conftest.py) keeps the Firefox driver setup and evidence handling.
+- The shared page and data fixtures live in [`fixtures/`](./fixtures) and are loaded by [`tests/conftest.py`](./tests/conftest.py).
+- The report is generated from the merged Allure results and exported as a single HTML file for direct opening.

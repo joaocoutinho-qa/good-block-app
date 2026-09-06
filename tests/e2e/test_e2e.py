@@ -6,9 +6,9 @@ from configuration import settings
 @allure.suite("End-to-End Tests")
 @allure.feature("Website blocking flow")
 @allure.title("TC01 - Complete blocking workflow")
-def test_TC01_complete_blocking_workflow(ready_group_page, group_data_factory):
-    group = group_data_factory(prefix="TC01", sites=[settings.FACEBOOK_DOMAIN])
-    page = ready_group_page(group["group_name"], group["sites"])
+def test_01_complete_blocking_workflow(create_group, create_group_data):
+    group = create_group_data(prefix="tc01", sites=[settings.FACEBOOK_DOMAIN])
+    page = create_group(group["group_name"], group["sites"])
     page.go_to(settings.FACEBOOK_URL)
     page.verify_site_is_blocked()
     page.verify_motivational_message_is_present()
