@@ -47,8 +47,8 @@ jobs:
       - name: Setup summary
         run: echo "Environment ready for the parallel acceptance tests." >> "$GITHUB_STEP_SUMMARY"
 
-  test_tc03:
-    name: TC03 - Allow access for disabled category
+  integration_tests:
+    name: Integration suite
     needs: setup
     runs-on: ubuntu-latest
     steps:
@@ -79,22 +79,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run TC03
-        run: xvfb-run --auto-servernum pytest -q tests/test_good_block.py -k TC03
+      - name: Run integration tests
+        run: xvfb-run --auto-servernum pytest -q tests/integration
 
-      - name: Upload TC03 evidence
+      - name: Upload integration evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tc03-evidence
+          name: integration-evidence
           path: |
             screenshots/
             dom/
             driver-logs/
           if-no-files-found: ignore
 
-  test_tc05:
-    name: TC05 - Remove URL and validate blocking rules
+  e2e_tests:
+    name: End-to-end suite
     needs: setup
     runs-on: ubuntu-latest
     steps:
@@ -125,60 +125,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run TC05
-        run: xvfb-run --auto-servernum pytest -q tests/test_good_block.py -k TC05
+      - name: Run e2e tests
+        run: xvfb-run --auto-servernum pytest -q tests/e2e
 
-      - name: Upload TC05 evidence
+      - name: Upload e2e evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tc05-evidence
-          path: |
-            screenshots/
-            dom/
-            driver-logs/
-          if-no-files-found: ignore
-
-  test_tc06:
-    name: TC06 - Complete blocking workflow
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install Firefox ESR
-        uses: browser-actions/setup-firefox@v1
-        with:
-          firefox-version: latest-esr
-
-      - name: Install geckodriver
-        uses: browser-actions/setup-geckodriver@latest
-        with:
-          geckodriver-version: latest
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes xvfb
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run TC06
-        run: xvfb-run --auto-servernum pytest -q tests/test_good_block.py -k TC06
-
-      - name: Upload TC06 evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tc06-evidence
+          name: e2e-evidence
           path: |
             screenshots/
             dom/
@@ -187,7 +141,7 @@ jobs:
 
   evidence_report_finalize:
     name: Evidence, report and finalization
-    needs: [test_tc03, test_tc05, test_tc06]
+    needs: [integration_tests, e2e_tests]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -204,9 +158,8 @@ jobs:
           {
             echo "# Good Block acceptance report";
             echo "";
-            echo "- TC03: ${{ needs.test_tc03.result }}";
-            echo "- TC05: ${{ needs.test_tc05.result }}";
-            echo "- TC06: ${{ needs.test_tc06.result }}";
+            echo "- integration: ${{ needs.integration_tests.result }}";
+            echo "- e2e: ${{ needs.e2e_tests.result }}";
           } > report/summary.md
           cat report/summary.md >> "$GITHUB_STEP_SUMMARY"
 
@@ -220,7 +173,7 @@ jobs:
 
       - name: Final status gate
         run: |
-          if [ "${{ needs.test_tc03.result }}" != "success" ] || [ "${{ needs.test_tc05.result }}" != "success" ] || [ "${{ needs.test_tc06.result }}" != "success" ]; then
-            echo "One or more acceptance tests failed." && exit 1
+          if [ "${{ needs.integration_tests.result }}" != "success" ] || [ "${{ needs.e2e_tests.result }}" != "success" ]; then
+            echo "One or more acceptance suites failed." && exit 1
           fi
-          echo "All acceptance tests passed."
+          echo "All acceptance suites passed."

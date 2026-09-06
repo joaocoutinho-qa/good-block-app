@@ -7,7 +7,6 @@ from selenium.webdriver.support.ui import Select
 from configuration import settings
 from pages.base_page import BasePage
 
-
 class GoodBlockPage(BasePage):
     URL_TEMPLATE = "moz-extension://{uuid}/popup.html"
 

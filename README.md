@@ -37,7 +37,9 @@ The extension is installed into a clean Firefox profile for each test run.
 configuration/  Environment-backed settings and shared constants
 extensions/     Signed Firefox extension package
 pages/          Base helpers and the Good Block page object
-tests/          Acceptance tests
+tests/
+  integration/  TC03 and TC05 acceptance checks
+  e2e/         TC06 end-to-end workflow validation
 .github/        GitHub Actions workflows
 ```
 
@@ -46,12 +48,11 @@ tests/          Acceptance tests
 The GitHub Actions pipeline is organized in four stages:
 
 1. **Setup**: installs Python, Firefox, geckodriver, and the test dependencies.
-2. **Parallel tests**: executes the acceptance checks in parallel for:
-   - **TC03**: allow access when the group is disabled
-   - **TC05**: URL removal propagates to the blocking rules
-   - **TC06**: full blocking workflow
-3. **Evidence collection**: uploads screenshots, DOM dumps, and driver logs for every test job.
-4. **Report and finalization**: consolidates the evidence, publishes a summary, and fails the workflow if any acceptance check fails.
+2. **Parallel suites**: runs the acceptance coverage in parallel for:
+   - `tests/integration`: **TC03** and **TC05**
+   - `tests/e2e`: **TC06**
+3. **Evidence collection**: uploads screenshots, DOM dumps, and driver logs for every suite job.
+4. **Report and finalization**: consolidates the evidence, publishes a summary, and fails the workflow if either suite fails.
 
 ## Run the tests locally
 
