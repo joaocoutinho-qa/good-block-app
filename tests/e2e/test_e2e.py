@@ -2,10 +2,10 @@
 import allure
 from configuration import settings
 
-#Define report suite names
+# Keep only the suite name in the Allure tree to avoid noisy parent/package labels.
 pytestmark = [
+    allure.parent_suite(""),
     allure.suite("End-to-End Tests"),
-    allure.feature("Website blocking flow"),
 ]
 
 @allure.title("TC01 - Complete blocking workflow")

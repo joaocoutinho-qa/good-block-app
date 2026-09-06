@@ -2,10 +2,10 @@
 import allure
 from configuration import settings
 
-# Define report suite names
+# Keep only the suite name in the Allure tree to avoid noisy parent/package labels.
 pytestmark = [
+    allure.parent_suite(""),
     allure.suite("Integration Tests"),
-    allure.feature("Rule and persistence checks"),
 ]
 
 @allure.title("TC01 - Allow access for disabled category")
