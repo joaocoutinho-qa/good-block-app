@@ -170,21 +170,22 @@ jobs:
       - name: Generate Allure report
         if: always()
         run: |
-          mkdir -p report merged-allure-results
+          mkdir -p good-block-report merged-allure-results
 
           find artifacts -type d -name 'allure-results' -print0 | while IFS= read -r -d '' result_dir; do
             find "$result_dir" -type f -name '*.json' -exec cp -f {} merged-allure-results/ \;
           done
 
           if [ -n "$(find merged-allure-results -type f | head -n 1)" ]; then
-            rm -rf report
-            allure generate merged-allure-results --clean --single-file -o report
-            cp report/index.html report.html
-            test -f report/index.html
+            rm -rf good-block-report
+            allure generate merged-allure-results --clean --single-file -o good-block-report
+            cp good-block-report/index.html good-block-report.html
+            test -f good-block-report/index.html
+            test -f good-block-report.html
             echo "Generated single-file report:"
-            ls -lh report/index.html report.html
+            ls -lh good-block-report/index.html good-block-report.html
           else
-            echo "No Allure results were produced." > report/summary.md
+            echo "No Allure results were produced." > good-block-report.summary.md
           fi
 
       - name: Write final summary
@@ -195,9 +196,9 @@ jobs:
             echo "";
             echo "- integration: ${{ needs.integration_tests.result }}";
             echo "- e2e: ${{ needs.e2e_tests.result }}";
-            echo "- allure report: available at report/index.html";
-          } > report/summary.md
-          cat report/summary.md >> "$GITHUB_STEP_SUMMARY"
+            echo "- allure report: available at good-block-report.html";
+          } > good-block-report.summary.md
+          cat good-block-report.summary.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload consolidated evidence
         if: always()
@@ -206,8 +207,9 @@ jobs:
           name: consolidated-evidence
           path: |
             artifacts/
-            report/
-            report.html
+            good-block-report/
+            good-block-report.html
+            good-block-report.summary.md
           if-no-files-found: ignore
 
       - name: Final status gate

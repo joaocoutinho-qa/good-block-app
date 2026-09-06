@@ -34,13 +34,13 @@ The extension is installed into a clean Firefox profile for each test run.
 ## Project structure
 
 ```text
-configuration/  Environment-backed settings and shared constants
-extensions/     Signed Firefox extension package
-pages/          Base helpers and the Good Block page object
+configuration/      Environment-backed settings and shared constants
+extensions/         Signed Firefox extension package
+pages/              Base helpers and the Good Block page object
 tests/
-  integration/  TC03 and TC05 acceptance checks
-  e2e/         TC06 end-to-end workflow validation
-.github/        GitHub Actions workflows
+  integration/      TC03 and TC05 acceptance checks
+  e2e/              TC06 end-to-end workflow validation
+.github/workflows/ GitHub Actions workflows
 ```
 
 ## Test execution flow
@@ -48,16 +48,18 @@ tests/
 The GitHub Actions pipeline is organized in four stages:
 
 1. **Setup**: installs Python, Firefox, geckodriver, and the test dependencies.
-2. **Parallel suites**: runs the acceptance coverage in parallel for:
-   - `tests/integration`: **TC03** and **TC05**
-   - `tests/e2e`: **TC06**
+2. **Parallel suite execution**: runs these folders in parallel:
+   - `tests/integration` → **TC03** and **TC05**
+   - `tests/e2e` → **TC06**
 3. **Evidence collection**: uploads screenshots, DOM dumps, and driver logs for every suite job.
-4. **Report and finalization**: consolidates the evidence, publishes a summary, and fails the workflow if either suite fails.
+4. **Report and finalization**: merges Allure results, publishes a single-file report, and fails the workflow if either suite fails.
+
+The generated report artifact is named `good-block-report.html` and can be opened directly in a browser without starting a local server.
 
 ## Run the tests locally
 
 ```powershell
-pytest -v
+pytest -v tests/integration tests/e2e
 ```
 
 The suite uses a new Firefox instance per test through the `driver` fixture in
@@ -67,9 +69,17 @@ The suite uses a new Firefox instance per test through the `driver` fixture in
 
 The current suite covers:
 
-- **TC03:** Facebook stays accessible when the configured group is disabled.
-- **TC05:** removing a URL updates the blocking rules and unblocks the page.
-- **TC06:** the block modal appears and the motivational message is displayed while the group is enabled.
+- **TC03 — Allow access for disabled category**: Facebook remains accessible when the configured group is disabled.
+- **TC05 — Propagate URL removal to blocking rules**: removing a URL updates the blocking rules and unblocks the page.
+- **TC06 — Complete blocking workflow**: the block modal appears and the motivational message is shown while the group is enabled.
+
+## Allure report
+
+Each CI run generates a consolidated Allure report that includes the `integration` and `e2e` suites together. The final artifact is exported as:
+
+- `good-block-report.html`
+
+This is a single-file HTML report so it can be opened directly from the downloaded artifact without running a local HTTP server.
 
 ## Failure evidence
 
