@@ -124,10 +124,15 @@ def _attach_video_to_allure(test_name, video_path):
     if allure is None or not video_path or not os.path.exists(video_path):
         return
 
+    attachment_kind = getattr(
+        allure.attachment_type,
+        "VIDEO",
+        getattr(allure.attachment_type, "MP4", allure.attachment_type.MP4),
+    )
     allure.attach.file(
         video_path,
         name=f"{test_name}_video",
-        attachment_type=allure.attachment_type.VIDEO,
+        attachment_type=attachment_kind,
         extension="mp4",
     )
 
