@@ -8,7 +8,7 @@ This project covers the functional test suite for the Firefox Good Block extensi
 
 Current tests coverage:
 - TC03 — allow access for a disabled category
-- TC05 — Checks if removing a URL lifts the site's block.
+- TC05 — Checks if removing a URL removes the site block.
 - TC01 — complete blocking workflow
 
 The suite is split into:
