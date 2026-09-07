@@ -2,9 +2,8 @@
 import allure
 from configuration import settings
 
-# Keep only the suite name in the Allure tree to avoid noisy parent/package labels.
 pytestmark = [
-    allure.parent_suite(""),
+    allure.parent_suite("Good Block"),
     allure.suite("Integration Tests"),
 ]
 
