@@ -44,14 +44,22 @@ good-block-automation/
 ├── pytest.ini
 ├── README.md
 ├── requirements.txt
-└── .env.example
 ```
 
 ## Requirements
 
+Before running the automation locally, make sure the machine has the following prerequisites configured correctly:
+
 - Python 3.12+
-- Firefox
+- Firefox installed and available on the local system
 - geckodriver available on `PATH`
+- A clean Firefox installation, without managed or restricted profiles that may block extension installation
+- The signed extension file present at:
+
+```text
+extensions/good_block-1.0.3.xpi
+```
+
 - Optional: Xvfb for headless/browser CI execution
 
 ## Setup
