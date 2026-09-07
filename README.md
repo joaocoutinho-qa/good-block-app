@@ -1,66 +1,125 @@
 # Good Block Automation
 
-End-to-end automation for the Firefox **Good Block** extension using Selenium,
-geckodriver, pytest, and the Page Object Model.
+Python + Selenium automation for the Firefox Good Block extension.
 
-## Requirements
+## Overview
 
-- Python 3.12 or later
-- Firefox
-- geckodriver available on `PATH`, or an internet connection so
-  `webdriver-manager` can download it
+This project covers the functional test suite for the Firefox Good Block extension using pytest and the Page Object Model.
 
-## Setup
+Current tests coverage:
+- TC03 — allow access for a disabled category
+- TC05 — Checks if removing a URL removes the site block.
+- TC01 — complete blocking workflow
 
-1. Create and activate a virtual environment.
-
-   ```powershell
-   python -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   ```
-
-2. Install the dependencies.
-
-   ```powershell
-   pip install -r requirements.txt
-   ```
-
-The signed extension package at
-[`extensions/good_block-1.0.3.xpi`](./extensions/good_block-1.0.3.xpi) is
-installed into a clean Firefox profile for every test.
+The suite is split into:
+- `tests/integration` for integration-layer functional checks
+- `tests/e2e` for end-to-end workflow validation
 
 ## Project structure
 
 ```text
-configuration/  Test settings and paths
-extensions/     Signed Firefox extension package
-pages/          Shared browser helpers and the Good Block Page Object
-tests/          Acceptance tests
+good-block-automation/
+├── .github/
+│   └── workflows/
+│       └── tests.yml
+├── configuration/
+│   └── settings.py
+├── extensions/
+│   └── good_block-1.0.3.xpi
+├── fixtures/
+│   ├── __init__.py
+│   ├── data_factory.py
+│   └── good_block_fixtures.py
+├── pages/
+│   ├── base_page.py
+│   └── good_block_page.py
+├── tests/
+│   ├── conftest.py
+│   ├── e2e/
+│   │   └── test_e2e.py
+│   └── integration/
+│       └── test_integration.py
+├── .gitignore
+├── conftest.py
+├── pytest.ini
+├── README.md
+├── requirements.txt
+└── .env.example
 ```
 
-## Run the tests
+## Requirements
+
+- Python 3.12+
+- Firefox
+- geckodriver available on `PATH`
+- Optional: Xvfb for headless/browser CI execution
+
+## Setup
+
+1. Create and activate the virtual environment:
 
 ```powershell
-pytest -v
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
-Each test uses a new Firefox instance through the `driver` fixture in
-[`conftest.py`](./conftest.py). The suite covers:
+2. Install dependencies:
 
-- **TC08:** Facebook stays accessible when the `Work` group is disabled.
-- **TC11:** Facebook displays the Good Block modal when the `Work` group is enabled.
+```powershell
+pip install -r requirements.txt
+```
+
+3. Set the target site you want to test:
+
+```powershell
+$env:TEST_URL = "www.example.com"
+```
+
+4. Ensure the signed extension exists:
+
+```text
+extensions/good_block-1.0.3.xpi
+```
+
+## Run locally
+
+Run all functional checks:
+
+```powershell
+pytest -q tests/integration tests/e2e
+```
+
+Run a specific suite:
+
+```powershell
+pytest -q tests/integration
+pytest -q tests/e2e
+```
+
+## CI flow
+
+The pipeline is organized in three stages:
+
+1. Setup environment
+2. Run `tests/integration` and `tests/e2e` in parallel
+3. Merge Allure results and publish the final HTML report
+
+The final artifact is:
+- `good-block-report.html`
+
+This is a single-file HTML report that can be opened directly in a browser.
 
 ## Failure evidence
 
-When a test fails, teardown saves a final screenshot, page DOM, and geckodriver
-log. Successful tests do not create evidence files. GitHub Actions uploads
-failure evidence as the `test-evidence` artifact.
+When a test fails, the driver fixture saves:
+- screenshot
+- DOM dump
+- geckodriver log
 
-## Troubleshooting
+These artifacts are uploaded by the GitHub Actions workflow for debugging.
 
-| Problem | Likely cause | Solution |
-|---|---|---|
-| `install_addon` reports a signature error | The XPI is missing or corrupt | Restore `extensions/good_block-1.0.3.xpi` and rerun the tests. |
-| The popup remains blank | Firefox has not registered the extension | Confirm the XPI installation completed and retry. |
-| geckodriver is missing | geckodriver is not on `PATH` | Let `webdriver-manager` download it, or install geckodriver locally. |
-| CI is slow or unstable | Firefox needs a display server | The GitHub Actions workflow runs Firefox through Xvfb. |
+## Notes
+
+- The root [`conftest.py`](./conftest.py) keeps the Firefox driver setup and evidence handling.
+- The shared page and data fixtures live in [`fixtures/`](./fixtures) and are loaded by [`tests/conftest.py`](./tests/conftest.py).
+- The report is generated from the merged Allure results and exported as a single HTML file for direct opening.

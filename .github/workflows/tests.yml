@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  setup:
+    name: Setup environment
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,17 +44,177 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests with Firefox in a virtual display
-        run: |
-          xvfb-run --auto-servernum pytest -v
+      - name: Setup summary
+        run: echo "Environment ready for the parallel acceptance tests." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload test evidence
-        uses: actions/upload-artifact@v4
-        if: always()
+  integration_tests:
+    name: Integration test suite
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          name: test-evidence
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Firefox ESR
+        uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: latest-esr
+
+      - name: Install geckodriver
+        uses: browser-actions/setup-geckodriver@latest
+        with:
+          geckodriver-version: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Integration tests
+        run: xvfb-run --auto-servernum pytest --alluredir=allure-results/integration -q tests/integration
+
+      - name: Upload integration evidence and allure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-allure-results
           path: |
+            allure-results/integration/
             screenshots/
             dom/
             driver-logs/
           if-no-files-found: ignore
+
+  e2e_tests:
+    name: E2E test suite
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Firefox ESR
+        uses: browser-actions/setup-firefox@v1
+        with:
+          firefox-version: latest-esr
+
+      - name: Install geckodriver
+        uses: browser-actions/setup-geckodriver@latest
+        with:
+          geckodriver-version: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run End-to-End tests
+        run: xvfb-run --auto-servernum pytest --alluredir=allure-results/e2e -q tests/e2e
+
+      - name: Upload E2E evidence and allure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-allure-results
+          path: |
+            allure-results/e2e/
+            screenshots/
+            dom/
+            driver-logs/
+          if-no-files-found: ignore
+
+  evidence_report_finalize:
+    name: Evidences and report
+    needs: [integration_tests, e2e_tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all evidence artifacts
+        id: download_evidence
+        continue-on-error: true
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-allure-results'
+          path: artifacts
+          merge-multiple: true
+
+      - name: Install Allure CLI
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/allure"
+          curl -fsSL https://github.com/allure-framework/allure2/releases/download/2.46.1/allure-2.46.1.tgz -o "$RUNNER_TEMP/allure/allure.tgz"
+          tar -xzf "$RUNNER_TEMP/allure/allure.tgz" -C "$RUNNER_TEMP/allure" --strip-components=1
+          chmod +x "$RUNNER_TEMP/allure/bin/allure"
+          echo "$RUNNER_TEMP/allure/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/allure/bin/allure" --version
+
+      - name: Generate Allure report
+        if: always()
+        run: |
+          mkdir -p good-block-report merged-allure-results
+
+          find artifacts -type d -name 'allure-results' -print0 | while IFS= read -r -d '' result_dir; do
+            find "$result_dir" -type f -name '*.json' -exec cp -f {} merged-allure-results/ \;
+          done
+
+          if [ -n "$(find merged-allure-results -type f | head -n 1)" ]; then
+            rm -rf good-block-report
+            allure generate merged-allure-results --clean --single-file -o good-block-report
+            cp good-block-report/index.html good-block-report.html
+            test -f good-block-report/index.html
+            test -f good-block-report.html
+            echo "Generated single-file report:"
+            ls -lh good-block-report/index.html good-block-report.html
+          else
+            echo "No Allure results were produced." > good-block-report.summary.md
+          fi
+
+      - name: Write final summary
+        if: always()
+        run: |
+          {
+            echo "# Good Block test report";
+            echo "";
+            echo "- Integration test suite: ${{ needs.integration_tests.result }}";
+            echo "- E2E test suite: ${{ needs.e2e_tests.result }}";
+            echo "- Allure report: available at good-block-report.html";
+          } > good-block-report.summary.md
+          cat good-block-report.summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload consolidated evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: consolidated-evidence
+          path: |
+            artifacts/
+            good-block-report/
+            good-block-report.html
+            good-block-report.summary.md
+          if-no-files-found: ignore
+
+      - name: Final status gate
+        run: |
+          if [ "${{ needs.integration_tests.result }}" != "success" ] || [ "${{ needs.e2e_tests.result }}" != "success" ]; then
+            echo "One or more acceptance suites failed." && exit 1
+          fi
+          echo "All acceptance suites passed."

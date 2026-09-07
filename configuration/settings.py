@@ -6,7 +6,13 @@ import os
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # The signed XPI allows Firefox to register the content script reliably in CI.
-EXTENSION_PATH = os.path.join(PROJECT_ROOT, "extensions", "good_block-1.0.3.xpi")
+EXTENSION_PATH = os.getenv(
+    "EXTENSION_PATH",
+    os.path.join(PROJECT_ROOT, "extensions", "good_block-1.0.3.xpi"),
+)
+
+# Keep the target host without protocol in settings; add https only when navigating.
+TEST_URL = os.getenv("TEST_URL", "www.example.com")
 
 # Timeouts in seconds used by BasePage explicit waits.
 DEFAULT_TIMEOUT = 10
