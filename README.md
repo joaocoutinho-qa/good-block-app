@@ -72,7 +72,7 @@ pip install -r requirements.txt
 3. Set the target site you want to test:
 
 ```powershell
-$env:TEST_URL = "wesper.co"
+$env:TEST_URL = "www.example.com"
 ```
 
 4. Ensure the signed extension exists:
