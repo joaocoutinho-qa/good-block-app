@@ -7,8 +7,8 @@ Python + Selenium automation for the Firefox Good Block extension.
 This project covers the functional test suite for the Firefox Good Block extension using pytest and the Page Object Model.
 
 Current tests coverage:
-- TC01 — allow access for a disabled category
-- TC02 — propagate URL removal to blocking rules
+- TC03 — allow access for a disabled category
+- TC05 — Checks if removing a URL lifts the site's block.
 - TC01 — complete blocking workflow
 
 The suite is split into:
