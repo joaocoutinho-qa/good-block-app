@@ -2,9 +2,9 @@ name: Run Good Block Selenium Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, tests ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, tests ]
   workflow_dispatch:
 
 jobs:
@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --yes xvfb
+          sudo apt-get install --yes xvfb ffmpeg
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
@@ -75,7 +75,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --yes xvfb
+          sudo apt-get install --yes xvfb ffmpeg
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
@@ -92,6 +92,7 @@ jobs:
             screenshots/
             dom/
             driver-logs/
+            videos/
           if-no-files-found: ignore
 
   e2e_tests:
@@ -122,7 +123,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --yes xvfb
+          sudo apt-get install --yes xvfb ffmpeg
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
@@ -139,6 +140,7 @@ jobs:
             screenshots/
             dom/
             driver-logs/
+            videos/
           if-no-files-found: ignore
 
   evidence_report_finalize:

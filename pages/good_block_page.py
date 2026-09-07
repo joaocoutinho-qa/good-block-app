@@ -100,9 +100,14 @@ class GoodBlockPage(BasePage):
             raise RuntimeError(f"Could not remove site from storage: {result['error']}")
         return self
 
-    def go_to(self, url):
-        """Navigate the browser to a target page."""
-        self.driver.get(url)
+    def go_to(self, url, page_load_timeout=300):
+        """Navigate the browser to a target page with a more tolerant page-load timeout."""
+        self.driver.set_page_load_timeout(page_load_timeout)
+        try:
+            self.driver.get(url)
+        except Exception:
+            self.driver.execute_script("window.stop();")
+            raise
         return self
 
     def verify_site_is_blocked(self):

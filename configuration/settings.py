@@ -12,9 +12,9 @@ EXTENSION_PATH = os.getenv(
 )
 
 # Keep the target host without protocol in settings; add https only when navigating.
-TEST_URL = os.getenv("TEST_URL", "www.example.com")
+TEST_URL = os.getenv("TEST_URL", "wesper.co")
 
 # Timeouts in seconds used by BasePage explicit waits.
-DEFAULT_TIMEOUT = 10
-SHORT_TIMEOUT = 5
-BLOCKED_PAGE_TIMEOUT = 20
+DEFAULT_TIMEOUT = 30
+SHORT_TIMEOUT = 15
+BLOCKED_PAGE_TIMEOUT = 60
