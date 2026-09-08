@@ -9,7 +9,7 @@ pytestmark = [
 
 @allure.title("TC03 - Allow access for disabled category")
 def test_03_allow_access_for_disabled_category(create_group, create_group_data):
-    group = create_group_data(prefix="tc01")
+    group = create_group_data(prefix="tc03")
     page = create_group(group["group_name"], group["sites"])
     page.toggle_group(group["group_name"])
     page.go_to(f"https://{settings.TEST_URL}")
@@ -17,7 +17,7 @@ def test_03_allow_access_for_disabled_category(create_group, create_group_data):
 
 @allure.title("TC05 - Check if removing a URL removes the site block.")
 def test_05_check_if_removing_a_URL_removes_the_site_block(create_group, create_group_data):
-    group = create_group_data(prefix="tc02")
+    group = create_group_data(prefix="tc05")
     page = create_group(group["group_name"], group["sites"])
     page.remove_site(group["group_name"], group["sites"][0])
     page.go_to(f"https://{settings.TEST_URL}")
