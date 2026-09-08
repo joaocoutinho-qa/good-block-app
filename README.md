@@ -23,7 +23,7 @@ This delivery focuses on three critical test cases, selected because a failure i
 
 - **TC01 — Complete blocking workflow**: validates the full site-blocking flow. If this fails, the app's core purpose is lost.
 - **TC03 — Allow access for disabled category**: validates that the toggle actually disables blocking for a specific group of sites. A failure here may require uninstalling the extension.
-- **TC05 — Checks if removing a URL removes the site block**: validates that removing a site actually disables blocking for that specific site. A failure here may require uninstalling the extension or deleting the group.
+- **TC05 — Check if removing a URL removes the site block**: validates that removing a site actually disables blocking for that specific site. A failure here may require uninstalling the extension or deleting the group.
 
 Other critical test, not implemented:
 - **TC04 - Persist Blocking after Firefox Restart**:  An important scenario to make sure data persistense in the Good Block extension
