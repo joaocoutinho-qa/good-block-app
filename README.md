@@ -1,19 +1,34 @@
 # Good Block Automation
 
+![Tests](https://github.com/joaocoutinho-qa/good-block-app/actions/workflows/tests.yml/badge.svg)
+
 Python + Selenium automation for the Firefox Good Block extension.
 
 ## Overview
 
 This project covers the functional test suite for the Firefox Good Block extension using pytest and the Page Object Model.
 
-Current tests coverage:
-- TC03 — allow access for a disabled category
-- TC05 — Checks if removing a URL removes the site block.
-- TC01 — complete blocking workflow
+Current autoamtion test coverage:
+- TC01 — Complete blocking workflow
+- TC03 — Allow access for a disabled category
+- TC05 — Check if removing a URL removes the site block.
 
 The suite is split into:
 - `tests/integration` for integration-layer functional checks
 - `tests/e2e` for end-to-end workflow validation
+
+## Test scope and selection
+
+This delivery focuses on three critical test cases, selected because a failure in any of them means the extension's core promise (blocking access reliably and configurably) is broken:
+
+- **TC01 — Complete blocking workflow**: validates the full site-blocking flow. If this fails, the app's core purpose is lost.
+- **TC03 — Allow access for disabled category**: validates that the toggle actually disables blocking for a specific group of sites. A failure here may require uninstalling the extension.
+- **TC05 — Checks if removing a URL removes the site block**: validates that removing a site actually disables blocking for that specific site. A failure here may require uninstalling the extension or deleting the group.
+
+Other critical test, not implemented:
+- **TC04 - Persist Blocking after Firefox Restart**:  An important scenario to make sure data persistense in the Good Block extension
+
+The full test plan (including cases not automated in this round) and the bug report are available in the project artifacts.
 
 ## Project structure
 
@@ -27,7 +42,6 @@ good-block-automation/
 ├── extensions/
 │   └── good_block-1.0.3.xpi
 ├── fixtures/
-│   ├── __init__.py
 │   ├── data_factory.py
 │   └── good_block_fixtures.py
 ├── pages/
