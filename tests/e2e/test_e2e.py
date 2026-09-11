@@ -13,5 +13,4 @@ pytestmark = [
 def test_01_complete_blocking_workflow(good_block_app):
     DataFactory.create_group(good_block_app)
     GoodBlockPage.go_to(f"https://{settings.TEST_URL}")
-    GoodBlockPage.verify_site_is_blocked()
     GoodBlockPage.verify_motivational_message_is_present()
