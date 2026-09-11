@@ -17,4 +17,4 @@ TEST_URL = os.getenv("TEST_URL", "wesper.co")
 # Timeouts in seconds used by BasePage explicit waits.
 DEFAULT_TIMEOUT = 30
 SHORT_TIMEOUT = 15
-BLOCKED_PAGE_TIMEOUT = 60
+BLOCKED_PAGE_TIMEOUT = 30

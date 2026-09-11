@@ -9,6 +9,20 @@ from pages.base_page import BasePage
 
 class GoodBlockPage(BasePage):
     URL_TEMPLATE = "moz-extension://{uuid}/popup.html"
+    CURRENT_PAGE = None
+
+    @classmethod
+    def set_current_page(cls, page):
+        """Keep the active page instance for class-level operations."""
+        cls.CURRENT_PAGE = page
+        return page
+
+    @classmethod
+    def get_current_page(cls):
+        """Return the page registered by the factory for class-level calls."""
+        if cls.CURRENT_PAGE is None:
+            raise RuntimeError("No current GoodBlockPage instance registered.")
+        return cls.CURRENT_PAGE
 
     # Good Block locators
     ADD_GROUP_BUTTON = (By.CSS_SELECTOR, "div[color='green']")
@@ -26,6 +40,8 @@ class GoodBlockPage(BasePage):
     def __init__(self, driver, uuid):
         super().__init__(driver)
         self.uuid = uuid
+        self.group_name = None
+        self.sites = []
 
     def open(self):
         """Open the Good Block popup for the installed extension."""
@@ -46,7 +62,12 @@ class GoodBlockPage(BasePage):
             self._wait_for_saved_site(name, site)
         return self
 
-    def toggle_group(self, name):
+    @staticmethod
+    def enable_group(name):
+        """Toggle the named group and wait until its state is stored."""
+        return GoodBlockPage.get_current_page().enable_group_instance(name)
+
+    def enable_group_instance(self, name):
         """Toggle the named group and wait until its state is stored."""
         self.select_group(name)
         was_active = self._get_saved_group(name).get("active")
@@ -75,7 +96,12 @@ class GoodBlockPage(BasePage):
         assert self.has_saved_site(group_name, site)
         return self
 
-    def remove_site(self, group_name, site):
+    @staticmethod
+    def remove_site(group_name, site):
+        """Remove a persisted site from the named group in extension storage."""
+        return GoodBlockPage.get_current_page().remove_site_instance(group_name, site)
+
+    def remove_site_instance(self, group_name, site):
         """Remove a persisted site from the named group in extension storage."""
         result = self.driver.execute_async_script(
             """
@@ -100,7 +126,12 @@ class GoodBlockPage(BasePage):
             raise RuntimeError(f"Could not remove site from storage: {result['error']}")
         return self
 
-    def go_to(self, url, page_load_timeout=300):
+    @staticmethod
+    def go_to(url, page_load_timeout=300):
+        """Navigate the browser to a target page with a more tolerant page-load timeout."""
+        return GoodBlockPage.get_current_page().go_to_instance(url, page_load_timeout)
+
+    def go_to_instance(self, url, page_load_timeout=30):
         """Navigate the browser to a target page with a more tolerant page-load timeout."""
         self.driver.set_page_load_timeout(page_load_timeout)
         try:
@@ -110,17 +141,35 @@ class GoodBlockPage(BasePage):
             raise
         return self
 
-    def verify_site_is_blocked(self):
+    @staticmethod
+    def verify_site_is_blocked():
+        """Assert that the blocked website modal is visible."""
+        return GoodBlockPage.get_current_page().verify_site_is_blocked_instance()
+
+    def verify_site_is_blocked_instance(self):
         """Assert that the blocked website modal is visible."""
         assert self.is_modal_visible()
         return self
 
-    def verify_site_is_not_blocked(self):
-        """Assert that the blocked website modal is not visible."""
-        assert self.is_modal_visible() is False
+    @staticmethod
+    def verify_site_is_not_blocked_after_load():
+        """Wait for the target page to finish loading and assert the blocker never appeared."""
+        return GoodBlockPage.get_current_page().verify_site_is_not_blocked_after_load_instance()
+
+    def verify_site_is_not_blocked_after_load_instance(self, load_timeout=10):
+        """Wait for page load and fail fast if the Good Block modal is present."""
+        self.wait(load_timeout).until(
+            lambda driver: driver.execute_script("return document.readyState") == "complete"
+        )
+        assert len(self.driver.find_elements(*self.BLOCKED_MODAL)) == 0
         return self
 
-    def verify_motivational_message_is_present(self):
+    @staticmethod
+    def verify_motivational_message_is_present():
+        """Assert the modal message exists and is not empty."""
+        return GoodBlockPage.get_current_page().verify_motivational_message_is_present_instance()
+
+    def verify_motivational_message_is_present_instance(self):
         """Assert the modal message exists and is not empty."""
         assert self.get_motivational_message() != ""
         return self
