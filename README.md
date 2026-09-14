@@ -62,60 +62,140 @@ good-block-automation/
 
 ## Requirements
 
-Before running the automation locally, make sure the machine has the following prerequisites configured correctly:
+Before running the automation locally, make sure the machine has the following prerequisites:
 
 - Python 3.12+
-- Firefox installed and available on the local system
-- geckodriver available on `PATH`
-- A clean Firefox installation, without managed or restricted profiles that may block extension installation
+- Firefox ESR installed. The local setup was validated with Firefox ESR 153.2.0.
 - The signed extension file present at:
 
 ```text
 extensions/good_block-1.0.3.xpi
 ```
 
-- Optional: Xvfb for headless/browser CI execution
+- A clean Firefox installation, without managed or restricted profiles that may block WebDriver sessions.
+- geckodriver is optional: the fixture uses a driver from `PATH` when available and otherwise downloads one with `webdriver-manager`.
+- Xvfb and ffmpeg are only required for the Linux CI workflow and video/evidence capture.
 
-## Setup
+## Setup (Windows PowerShell)
 
-1. Create and activate the virtual environment:
+1. Confirm that Firefox ESR is installed. The package name must be `Mozilla.Firefox.ESR`:
+
+```powershell
+winget list --id Mozilla.Firefox.ESR -e
+```
+
+If it is not installed, install it with:
+
+```powershell
+winget install --id Mozilla.Firefox.ESR -e
+```
+
+Confirm the executable version:
+
+```powershell
+(Get-Item "C:\Program Files\Mozilla Firefox\firefox.exe").VersionInfo | Select-Object ProductVersion,ProductName
+```
+
+The package list should identify `Mozilla Firefox ESR`. A normal Firefox installation may cause recent Firefox versions to block WebDriver access to extension pages.
+
+2. Create and activate the virtual environment:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-2. Install dependencies:
+If PowerShell blocks script activation, allow it only for the current terminal:
 
 ```powershell
-pip install -r requirements.txt
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+.\.venv\Scripts\Activate.ps1
 ```
 
-3. Set the target site you want to test:
+3. Install the project dependencies inside the activated environment:
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+4. Set the target site. Use only the host name, without `https://`:
 
 ```powershell
 $env:TEST_URL = "wesper.co"
 ```
 
-4. Ensure the signed extension exists:
+5. Confirm that the signed extension is present:
 
 ```text
 extensions/good_block-1.0.3.xpi
 ```
 
-## Run locally
-
-Run all functional checks:
+If the `.xpi` was downloaded from the internet and Firefox reports `ERROR_FILE_ACCESS`, unblock the file once:
 
 ```powershell
-pytest -q tests/integration tests/e2e
+Unblock-File .\extensions\good_block-1.0.3.xpi
+```
+
+Do not install the extension manually in your personal Firefox profile. The fixture installs the `.xpi` automatically in an isolated WebDriver profile. The geckodriver service also uses `--allow-system-access`, required by Firefox 153+ to access `about:debugging` and `moz-extension://` pages during automation.
+
+## Run locally
+
+Run the complete suite with the Firefox interface visible:
+
+```powershell
+$env:TEST_URL = "wesper.co"
+Remove-Item Env:HEADLESS -ErrorAction SilentlyContinue
+python -m pytest -vv -s tests/integration tests/e2e
+```
+
+Run only the E2E test with the Firefox interface visible:
+
+```powershell
+$env:TEST_URL = "wesper.co"
+Remove-Item Env:HEADLESS -ErrorAction SilentlyContinue
+python -m pytest -vv -s tests/e2e/test_e2e.py
+```
+
+Run all tests in headless mode:
+
+```powershell
+$env:TEST_URL = "wesper.co"
+$env:HEADLESS = "1"
+python -m pytest -q tests/integration tests/e2e
 ```
 
 Run a specific suite:
 
 ```powershell
-pytest -q tests/integration
-pytest -q tests/e2e
+python -m pytest -q tests/integration
+python -m pytest -q tests/e2e
+```
+
+The first run may download geckodriver through `webdriver-manager` if no `geckodriver` executable is available on `PATH`. The test opens a separate Firefox WebDriver profile, installs `extensions/good_block-1.0.3.xpi` in that profile, and closes the profile after the test.
+
+### Exact Windows sequence
+
+Run these commands in order from the project root:
+
+```powershell
+winget list --id Mozilla.Firefox.ESR -e
+python -m venv .venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+$env:TEST_URL = "wesper.co"
+Unblock-File .\extensions\good_block-1.0.3.xpi
+Remove-Item Env:HEADLESS -ErrorAction SilentlyContinue
+python -m pytest -vv -s tests/integration tests/e2e
+```
+
+The last command runs all three tests with the Firefox window visible. To run without the interface, replace the last two commands with:
+
+```powershell
+$env:HEADLESS = "1"
+python -m pytest -q tests/integration tests/e2e
 ```
 
 ## CI flow

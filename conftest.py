@@ -30,14 +30,14 @@ def _build_service(log_output=None):
     if geckodriver_path:
         return FirefoxService(
             executable_path=geckodriver_path,
-            service_args=["--log", "trace"],
+            service_args=["--log", "trace", "--allow-system-access"],
             log_output=log_output,
         )
 
     from webdriver_manager.firefox import GeckoDriverManager
     return FirefoxService(
         executable_path=GeckoDriverManager().install(),
-        service_args=["--log", "trace"],
+        service_args=["--log", "trace", "--allow-system-access"],
         log_output=log_output,
     )
 
